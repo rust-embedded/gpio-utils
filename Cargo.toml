@@ -1,0 +1,6 @@
+[package]
+name = "gpio-utils"
+version = "0.1.0"
+authors = ["Paul Osborne <osbpau@gmail.com>"]
+
+[dependencies]
