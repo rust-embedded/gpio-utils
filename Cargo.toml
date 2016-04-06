@@ -6,3 +6,7 @@ authors = ["Paul Osborne <osbpau@gmail.com>"]
 [dependencies]
 sysfs_gpio = "0.4.0"
 clap = "2.2"
+
+[[bin]]
+name = "gpio"
+path = "src/main.rs"
