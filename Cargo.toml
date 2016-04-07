@@ -4,3 +4,10 @@ version = "0.1.0"
 authors = ["Paul Osborne <osbpau@gmail.com>"]
 
 [dependencies]
+sysfs_gpio = "0.4"
+clap = "2.2"
+toml = "0.1"
+
+[[bin]]
+name = "gpio"
+path = "src/main.rs"

@@ -1,0 +1,12 @@
+language: rust
+sudo: false
+
+rust:
+  - 1.6.0
+  - stable
+  - beta
+  - nightly
+
+script:
+  - cargo test
+  - cargo doc
