@@ -15,7 +15,7 @@ cargo install gpio-utils
 
 ## Features
 
-- [ ] Infrastructure for providing names for the GPIOs in one systems providing
+- [ ] Infrastructure for providing names for the GPIOs in one's system providing
       names that map to individual pins.  These names (in addition to GPIO numbers)
       may be used with other commands.
 - [ ] Ability to export/unexport GPIOs and expose symlinks using the GPIO "friendly"
@@ -32,7 +32,7 @@ system:
 
 1. The `gpio` command.  This provides the core functionality for GPIO Utils and
    is useful in its own right.
-2. The `gpio` init script.  This init script can be integrated into a target
+2. The `gpio` init script/systemd service.  This can be integrated into a target
    system and will ensure that configured GPIOs get exported on system startup
    (The GPIO command searches for `/etc/gpio.toml` and `/etc/gpio.d/*.toml`
    configs)

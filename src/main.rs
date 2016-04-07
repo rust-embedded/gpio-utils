@@ -26,7 +26,7 @@ fn main() {
 
         // gpio poll
         .subcommand(SubCommand::with_name("poll")
-                    .about("Wait for an event to happen on an GPIO Input")
+                    .about("Wait for an event to happen on a GPIO Input")
                     .arg(Arg::with_name("pin")
                          .help("The pin name (or number)")
                          .index(1)
@@ -70,7 +70,7 @@ fn main() {
 
         // gpio status
         .subcommand(SubCommand::with_name("status")
-                    .about("Output status of all configured GPIOs")
+                    .about("Output status of a GPIO or all GPIOs if no pin is specified")
                     .arg(Arg::with_name("pin")
                          .help("The pin name (or number)")
                          .index(1)
