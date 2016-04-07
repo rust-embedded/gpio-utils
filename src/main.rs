@@ -1,11 +1,17 @@
+// Copyright (C) 2016, Paul Osborne <osbpau@gmail.com>
+
+extern crate gpio_utils;
 extern crate clap;
 
-use clap::{Arg, App, SubCommand};
+use clap::{Arg, App, SubCommand, AppSettings};
+use gpio_utils::options::*;
+use gpio_utils::commands::{gpio_read};
 
 fn main() {
-    let gpio_cmd_matches = App::new("GPIO Utils")
+    let matches = App::new("GPIO Utils")
         .version(env!("CARGO_PKG_VERSION"))
         .about("Read, Write, and Configure GPIOs")
+        .setting(AppSettings::SubcommandRequired)
 
         // Global options
         .arg(Arg::with_name("config")
@@ -78,8 +84,19 @@ fn main() {
 
         .get_matches();
 
-    match gpio_cmd_matches.subcommand() {
-        ("read", Some(m)) => {},
+    // process global options
+    let gpio_options = GpioOptions {
+        configs: matches.values_of_lossy("config").unwrap_or(Vec::new()),
+    };
+
+    match matches.subcommand() {
+        ("read", Some(m)) => {
+            let read_options = GpioReadOptions {
+                gpio_opts: gpio_options,
+                pin: String::from(m.value_of("pin").unwrap()),
+            };
+            gpio_read::main(&read_options);
+        },
         ("poll", Some(m)) => {},
         ("write", Some(m)) => {},
         ("export", Some(m)) => {},
