@@ -3,6 +3,7 @@
 extern crate sysfs_gpio;
 extern crate rustc_serialize;
 extern crate toml;
+extern crate glob;
 
 pub mod options;
 pub mod config;
