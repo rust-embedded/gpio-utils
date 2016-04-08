@@ -28,6 +28,7 @@ pub struct GpioConfig {
 pub enum Error {
     IoError(io::Error),
     ParserErrors(Vec<toml::ParserError>),
+    DecodingError(toml::DecodeError),
     NoConfigFound,
 }
 
@@ -50,6 +51,12 @@ impl From<io::Error> for Error {
 impl From<Vec<toml::ParserError>> for Error {
     fn from(e: Vec<toml::ParserError>) -> Self {
         Error::ParserErrors(e)
+    }
+}
+
+impl From<toml::DecodeError> for Error {
+    fn from(e: toml::DecodeError) -> Self {
+        Error::DecodingError(e)
     }
 }
 
@@ -82,7 +89,7 @@ impl GpioConfig {
 
         // /etc/gpio.d/*.toml
         for fragment in glob("/etc/gpio.d/*.toml").unwrap().filter_map(Result::ok) {
-            config_instances.push(try!(Self::from_file("/etc/gpio.toml")));
+            config_instances.push(try!(Self::from_file(fragment)));
         }
 
         // additional from command-line
@@ -104,7 +111,10 @@ impl GpioConfig {
         let mut parser = toml::Parser::new(config);
         let root = try!(parser.parse().ok_or(parser.errors));
         let mut d = toml::Decoder::new(toml::Value::Table(root));
-        Ok(Decodable::decode(&mut d).unwrap())
+        match Decodable::decode(&mut d) {
+            Ok(cfg) => Ok(cfg),
+            Err(e) => Err(Error::from(e)),
+        }
     }
 
     /// Load a GPIO config from the specified path
@@ -163,6 +173,27 @@ error_led = { num = 11, direction = "in", export = false}
         assert_eq!(status_led.direction, Some(String::from("out")));
         assert_eq!(status_led.active_low, None);
         assert_eq!(status_led.export, None);
+    }
+
+    #[test]
+    fn test_parser_empty_toml() {
+        let configstr = "";
+        match GpioConfig::from_str(configstr) {
+            Err(Error::DecodingError(_)) => {},
+            _ => panic!("Expected a decoding error"),
+        }
+    }
+
+    #[test]
+    fn test_parser_missing_pinnum() {
+        let configstr = r#"
+[pins.reset_button]
+export = true
+"#;
+        match GpioConfig::from_str(configstr) {
+            Err(Error::DecodingError(_)) => {},
+            _ => panic!("Expected a decoding error"),
+        }
     }
 
     #[test]
