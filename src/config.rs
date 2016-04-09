@@ -2,7 +2,7 @@
 
 use glob::glob;
 use rustc_serialize::{Decodable, Decoder};
-use std::collections::{BTreeSet, HashMap};
+use std::collections::BTreeSet;
 use std::fs::{self, File};
 use std::io;
 use std::io::prelude::*;
@@ -19,15 +19,6 @@ impl From<sysfs_gpio::Direction> for Direction {
     }
 }
 
-#[derive(RustcDecodable, Clone, Debug, PartialEq)]
-struct RawPinConfig {
-    pub num: u64,
-    pub direction: Option<Direction>,
-    pub names: BTreeSet<String>,
-    pub export: Option<bool>,
-    pub active_low: Option<bool>,
-}
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct PinConfig {
     pub num: u64,
@@ -37,37 +28,7 @@ pub struct PinConfig {
     pub active_low: bool,
 }
 
-impl Into<PinConfig> for RawPinConfig {
-    fn into(self) -> PinConfig {
-        let default_direction = Direction(sysfs_gpio::Direction::In);
-        PinConfig {
-            num: self.num,
-            direction: self.direction.unwrap_or(default_direction).0,
-            names: self.names,
-            export: self.export.unwrap_or(true),
-            active_low: self.active_low.unwrap_or(false),
-        }
-    }
-}
-
-impl Decodable for Direction {
-    fn decode<D: Decoder>(d: &mut D) -> Result<Direction, D::Error> {
-        match &try!(d.read_str())[..] {
-            "in" => Ok(Direction(sysfs_gpio::Direction::In)),
-            "out" => Ok(Direction(sysfs_gpio::Direction::Out)),
-            "high" => Ok(Direction(sysfs_gpio::Direction::High)),
-            "low" => Ok(Direction(sysfs_gpio::Direction::Low)),
-            _ => Err(d.error("Expected one of: {in, out, high, low}")),
-        }
-    }
-}
-
 #[derive(RustcDecodable, Clone, Debug)]
-struct RawGpioConfig {
-    pub pins: Vec<RawPinConfig>,
-}
-
-#[derive(Clone, Debug)]
 pub struct GpioConfig {
     pub pins: Vec<PinConfig>,
 }
@@ -98,11 +59,23 @@ impl From<toml::DecodeError> for Error {
     }
 }
 
-impl Into<GpioConfig> for RawGpioConfig {
-    fn into(self) -> GpioConfig {
-        GpioConfig {
-            pins: self.pins.into_iter().map(|p| p.into()).collect(),
-        }
+impl Decodable for PinConfig {
+    fn decode<D: Decoder>(d: &mut D) -> Result<PinConfig, D::Error> {
+        Ok(PinConfig {
+            num: try!(d.read_struct_field("num", 0, Decodable::decode)),
+            direction: d.read_struct_field("direction", 0, |dir_d| {
+                match &try!(dir_d.read_str())[..] {
+                    "in" => Ok(sysfs_gpio::Direction::In),
+                    "out" => Ok(sysfs_gpio::Direction::Out),
+                    "high" => Ok(sysfs_gpio::Direction::High),
+                    "low" => Ok(sysfs_gpio::Direction::Low),
+                    _ => Err(dir_d.error("Expected one of: {in, out, high, low}")),
+                }
+            }).unwrap_or(sysfs_gpio::Direction::In), // default: In
+            names: d.read_struct_field("names", 0, Decodable::decode).unwrap_or(BTreeSet::new()),
+            export: d.read_struct_field("export", 0, Decodable::decode).unwrap_or(true),
+            active_low: d.read_struct_field("active_low", 0, Decodable::decode).unwrap_or(false),
+        })
     }
 }
 
@@ -158,13 +131,10 @@ impl GpioConfig {
     pub fn from_str(config: &str) -> Result<GpioConfig, Error> {
         let mut parser = toml::Parser::new(config);
         let root = try!(parser.parse().ok_or(parser.errors));
-        let mut d = toml::Decoder::new(toml::Value::Table(root));
-        let rawcfg: RawGpioConfig = try!(match Decodable::decode(&mut d) {
-            Ok(rawcfg) =>  Ok(rawcfg),
+        match Decodable::decode(&mut toml::Decoder::new(toml::Value::Table(root))) {
+            Ok(cfg) => Ok(cfg),
             Err(e) => Err(Error::from(e)),
-        });
-
-        Ok(rawcfg.into())
+        }
     }
 
     /// Load a GPIO config from the specified path
@@ -311,7 +281,7 @@ names = ["wildcard"]
         // basically, just garbage data
         let configstr = r"[] -*-..asdf=-=-@#$%^&*()";
         match GpioConfig::from_str(configstr) {
-            Err(Error::ParserErrors(e)) => {},
+            Err(Error::ParserErrors(_)) => {},
             _ => panic!("Did not receive parse error when expected"),
         }
     }
