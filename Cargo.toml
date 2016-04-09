@@ -4,9 +4,13 @@ version = "0.1.0"
 authors = ["Paul Osborne <osbpau@gmail.com>"]
 
 [dependencies]
-sysfs_gpio = "0.4"
 clap = "2.2"
+rustc-serialize = "0.3"
+sysfs_gpio = "0.4"
 toml = "0.1"
+glob = "0.2"
+log = "0.3"
+env_logger = "0.3"
 
 [[bin]]
 name = "gpio"
