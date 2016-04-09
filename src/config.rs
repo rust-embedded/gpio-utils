@@ -1,27 +1,75 @@
 // Copyright (C) 2016, Paul Osborne <osbpau@gmail.com>
 
 use glob::glob;
-use rustc_serialize::{Decodable};
-use std::collections::{HashMap, BTreeSet};
+use rustc_serialize::{Decodable, Decoder};
+use std::collections::{BTreeSet};
 use std::fs::{self, File};
 use std::io;
 use std::io::prelude::*;
 use std::path::Path;
-use sysfs_gpio::Direction;
+use sysfs_gpio::Direction as SysfsDirection;
 use toml;
 
-#[derive(RustcDecodable, Clone, Debug)]
+#[derive(Debug, PartialEq, Clone)]
+pub struct Direction(pub SysfsDirection);
+
+impl From<SysfsDirection> for Direction {
+    fn from(e: SysfsDirection) -> Self {
+        Direction(e)
+    }
+}
+
+#[derive(RustcDecodable, Clone, Debug, PartialEq)]
+struct RawPinConfig {
+    pub num: u64,
+    pub direction: Option<Direction>,
+    pub names: BTreeSet<String>,
+    pub export: Option<bool>,
+    pub active_low: Option<bool>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct PinConfig {
-    num: u64,
-    direction: Option<String>,
-    aliases: Option<BTreeSet<String>>,
-    export: Option<bool>,
-    active_low: Option<bool>,
+    pub num: u64,
+    pub direction: SysfsDirection,
+    pub names: BTreeSet<String>,
+    pub export: bool,
+    pub active_low: bool,
+}
+
+impl Into<PinConfig> for RawPinConfig {
+    fn into(self) -> PinConfig {
+        let default_direction = Direction(SysfsDirection::In);
+        PinConfig {
+            num: self.num,
+            direction: self.direction.unwrap_or(default_direction).0,
+            names: self.names,
+            export: self.export.unwrap_or(true),
+            active_low: self.active_low.unwrap_or(false),
+        }
+    }
+}
+
+impl Decodable for Direction {
+    fn decode<D: Decoder>(d: &mut D) -> Result<Direction, D::Error> {
+        match try!(d.read_str()).as_str() {
+            "in" => Ok(Direction(SysfsDirection::In)),
+            "out" => Ok(Direction(SysfsDirection::Out)),
+            "high" => Ok(Direction(SysfsDirection::High)),
+            "low" => Ok(Direction(SysfsDirection::Low)),
+            _ => Err(d.error("Expected one of: {in, out, high, low}")),
+        }
+    }
 }
 
 #[derive(RustcDecodable, Clone, Debug)]
+struct RawGpioConfig {
+    pub pins: Vec<RawPinConfig>,
+}
+
+#[derive(Clone, Debug)]
 pub struct GpioConfig {
-    pins: HashMap<String, PinConfig>,
+    pub pins: Vec<PinConfig>,
 }
 
 #[derive(Debug)]
@@ -30,16 +78,6 @@ pub enum Error {
     ParserErrors(Vec<toml::ParserError>),
     DecodingError(toml::DecodeError),
     NoConfigFound,
-}
-
-fn to_direction(dirstr: &str) -> Option<Direction> {
-    match dirstr {
-        "in" => Some(Direction::In),
-        "out" => Some(Direction::Out),
-        "high" => Some(Direction::High),
-        "low" => Some(Direction::Low),
-        _ => None
-    }
 }
 
 impl From<io::Error> for Error {
@@ -57,6 +95,14 @@ impl From<Vec<toml::ParserError>> for Error {
 impl From<toml::DecodeError> for Error {
     fn from(e: toml::DecodeError) -> Self {
         Error::DecodingError(e)
+    }
+}
+
+impl Into<GpioConfig> for RawGpioConfig {
+    fn into(self) -> GpioConfig {
+        GpioConfig {
+            pins: self.pins.into_iter().map(|p| p.into()).collect(),
+        }
     }
 }
 
@@ -79,7 +125,7 @@ impl GpioConfig {
     /// Each config file found in these locations will be loaded and then they
     /// will be pulled together to form a unified configuration via the
     /// `combine` method.
-    pub fn load(configs: &[&str]) -> Result<GpioConfig, Error> {
+    pub fn load(configs: &[String]) -> Result<GpioConfig, Error> {
         let mut config_instances: Vec<GpioConfig> = Vec::new();
 
         // check /etc/gpio.toml
@@ -100,9 +146,11 @@ impl GpioConfig {
         if config_instances.len() == 0 {
             Err(Error::NoConfigFound)
         } else {
-            Ok(config_instances[1..].iter().fold(config_instances[0].clone(), |a, b| {
-                a.merge(b)
-            }))
+            let mut cfg = config_instances.remove(0);
+            for higher_priority_cfg in config_instances {
+                cfg.update(higher_priority_cfg);
+            }
+            Ok(cfg)
         }
     }
 
@@ -111,10 +159,12 @@ impl GpioConfig {
         let mut parser = toml::Parser::new(config);
         let root = try!(parser.parse().ok_or(parser.errors));
         let mut d = toml::Decoder::new(toml::Value::Table(root));
-        match Decodable::decode(&mut d) {
-            Ok(cfg) => Ok(cfg),
+        let rawcfg: RawGpioConfig = try!(match Decodable::decode(&mut d) {
+            Ok(rawcfg) =>  Ok(rawcfg),
             Err(e) => Err(Error::from(e)),
-        }
+        });
+
+        Ok(rawcfg.into())
     }
 
     /// Load a GPIO config from the specified path
@@ -128,15 +178,10 @@ impl GpioConfig {
     /// Merge this config with other yielding a new, merged version
     ///
     /// If in conflict, the other GPIO config takes priority.
-    pub fn merge(&self, other: &GpioConfig) -> GpioConfig {
+    pub fn update(&mut self, other: GpioConfig) {
         // TODO: This needs to actually resolve conflicts rather than
         //   blindly writing over as it does now.
-        let mut pins = HashMap::new();
-        pins.extend(self.pins.clone());
-        pins.extend(other.pins.clone());
-        GpioConfig {
-            pins: pins
-        }
+        self.pins.extend(other.pins)
     }
 }
 
@@ -145,41 +190,62 @@ mod test {
     use super::*;
     use std::iter::FromIterator;
     use std::collections::BTreeSet;
+    use sysfs_gpio::Direction as D;
 
     #[test]
     fn test_parse_basic() {
         let configstr = r#"
 # Basic Form
-[pins.reset_button]
-num = 73           # required
+[[pins]]
+
+num = 73
+names = ["reset_button"]
 direction = "in"   # default: in
 active_low = true  # default: false
 export = true      # default: true
 
-[pins.status_led]
+[[pins]]
 num = 37
-aliases = ["A27", "green_led"]
+names = ["status_led", "A27", "green_led"]
 direction = "out"
-
-# Compact Form
-[pins]
-error_led = { num = 11, direction = "in", export = false}
 "#;
         let config = GpioConfig::from_str(configstr).unwrap();
-        let status_led = config.pins.get("status_led").unwrap();
-        let mut aliases = BTreeSet::from_iter(vec!(String::from("A27"), String::from("green_led")));
-        assert_eq!(status_led.num, 37);
-        assert_eq!(status_led.aliases, Some(aliases));
-        assert_eq!(status_led.direction, Some(String::from("out")));
-        assert_eq!(status_led.active_low, None);
-        assert_eq!(status_led.export, None);
+        let status_led = config.pins.get(1).unwrap();
+        let mut names = BTreeSet::from_iter(
+            vec!(String::from("status_led"),
+                 String::from("A27"),
+                 String::from("green_led")));
+        assert_eq!(status_led.names, names);
+        assert_eq!(status_led.direction, D::Out);
+        assert_eq!(status_led.active_low, false);
+        assert_eq!(status_led.export, true);
+    }
+
+    #[test]
+    fn test_parser_compact() {
+        let configstr = r#"
+pins = [
+   { num = 73, names = ["reset_button"], direction = "in", active_low = true, export = true},
+   { num = 37, names = ["status_led", "A27", "green_led"], direction = "out"},
+]
+"#;
+        let config = GpioConfig::from_str(configstr).unwrap();
+        let status_led = config.pins.get(1).unwrap();
+        let mut names = BTreeSet::from_iter(
+            vec!(String::from("status_led"),
+                 String::from("A27"),
+                 String::from("green_led")));
+        assert_eq!(status_led.names, names);
+        assert_eq!(status_led.direction, D::Out);
+        assert_eq!(status_led.active_low, false);
+        assert_eq!(status_led.export, true);
     }
 
     #[test]
     fn test_parser_empty_toml() {
         let configstr = "";
         match GpioConfig::from_str(configstr) {
-            Err(Error::DecodingError(_)) => {},
+            Ok(pins) => { assert_eq!(pins.pins, vec!()) },
             _ => panic!("Expected a decoding error"),
         }
     }
@@ -187,7 +253,7 @@ error_led = { num = 11, direction = "in", export = false}
     #[test]
     fn test_parser_missing_pinnum() {
         let configstr = r#"
-[pins.reset_button]
+[[pins]]
 export = true
 "#;
         match GpioConfig::from_str(configstr) {

@@ -2,12 +2,18 @@
 
 extern crate gpio_utils;
 extern crate clap;
+extern crate env_logger;
+#[macro_use]
+extern crate log;
+
 
 use clap::{Arg, App, SubCommand, AppSettings};
 use gpio_utils::options::*;
-use gpio_utils::commands::{gpio_read};
+use gpio_utils::commands::*;
 
 fn main() {
+    env_logger::init().unwrap();
+
     let matches = App::new("GPIO Utils")
         .version(env!("CARGO_PKG_VERSION"))
         .about("Read, Write, and Configure GPIOs")
@@ -97,13 +103,18 @@ fn main() {
             };
             gpio_read::main(&read_options);
         },
-        ("poll", Some(m)) => {},
-        ("write", Some(m)) => {},
-        ("export", Some(m)) => {},
-        ("export-all", Some(m)) => {},
-        ("unexport", Some(m)) => {},
-        ("unexport-all", Some(m)) => {},
-        ("status", Some(m)) => {},
+        ("poll", Some(_)) => {},
+        ("write", Some(_)) => {},
+        ("export", Some(_)) => {},
+        ("export-all", Some(_)) => {
+            let exportall_options = GpioExportAllOptions {
+                gpio_opts: gpio_options,
+            };
+            gpio_exportall::main(&exportall_options);
+        },
+        ("unexport", Some(_)) => {},
+        ("unexport-all", Some(_)) => {},
+        ("status", Some(_)) => {},
         _ => {}
     }
 }
