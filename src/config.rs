@@ -7,14 +7,14 @@ use std::fs::{self, File};
 use std::io;
 use std::io::prelude::*;
 use std::path::Path;
-use sysfs_gpio::Direction as SysfsDirection;
+use sysfs_gpio;
 use toml;
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct Direction(pub SysfsDirection);
+pub struct Direction(pub sysfs_gpio::Direction);
 
-impl From<SysfsDirection> for Direction {
-    fn from(e: SysfsDirection) -> Self {
+impl From<sysfs_gpio::Direction> for Direction {
+    fn from(e: sysfs_gpio::Direction) -> Self {
         Direction(e)
     }
 }
@@ -31,7 +31,7 @@ struct RawPinConfig {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PinConfig {
     pub num: u64,
-    pub direction: SysfsDirection,
+    pub direction: sysfs_gpio::Direction,
     pub names: BTreeSet<String>,
     pub export: bool,
     pub active_low: bool,
@@ -39,7 +39,7 @@ pub struct PinConfig {
 
 impl Into<PinConfig> for RawPinConfig {
     fn into(self) -> PinConfig {
-        let default_direction = Direction(SysfsDirection::In);
+        let default_direction = Direction(sysfs_gpio::Direction::In);
         PinConfig {
             num: self.num,
             direction: self.direction.unwrap_or(default_direction).0,
@@ -53,10 +53,10 @@ impl Into<PinConfig> for RawPinConfig {
 impl Decodable for Direction {
     fn decode<D: Decoder>(d: &mut D) -> Result<Direction, D::Error> {
         match try!(d.read_str()).as_str() {
-            "in" => Ok(Direction(SysfsDirection::In)),
-            "out" => Ok(Direction(SysfsDirection::Out)),
-            "high" => Ok(Direction(SysfsDirection::High)),
-            "low" => Ok(Direction(SysfsDirection::Low)),
+            "in" => Ok(Direction(sysfs_gpio::Direction::In)),
+            "out" => Ok(Direction(sysfs_gpio::Direction::Out)),
+            "high" => Ok(Direction(sysfs_gpio::Direction::High)),
+            "low" => Ok(Direction(sysfs_gpio::Direction::Low)),
             _ => Err(d.error("Expected one of: {in, out, high, low}")),
         }
     }
@@ -211,7 +211,7 @@ direction = "out"
 "#;
         let config = GpioConfig::from_str(configstr).unwrap();
         let status_led = config.pins.get(1).unwrap();
-        let mut names = BTreeSet::from_iter(
+        let names = BTreeSet::from_iter(
             vec!(String::from("status_led"),
                  String::from("A27"),
                  String::from("green_led")));
@@ -231,7 +231,7 @@ pins = [
 "#;
         let config = GpioConfig::from_str(configstr).unwrap();
         let status_led = config.pins.get(1).unwrap();
-        let mut names = BTreeSet::from_iter(
+        let names = BTreeSet::from_iter(
             vec!(String::from("status_led"),
                  String::from("A27"),
                  String::from("green_led")));
