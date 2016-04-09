@@ -52,7 +52,7 @@ impl Into<PinConfig> for RawPinConfig {
 
 impl Decodable for Direction {
     fn decode<D: Decoder>(d: &mut D) -> Result<Direction, D::Error> {
-        match try!(d.read_str()).as_str() {
+        match &try!(d.read_str())[..] {
             "in" => Ok(Direction(sysfs_gpio::Direction::In)),
             "out" => Ok(Direction(sysfs_gpio::Direction::Out)),
             "high" => Ok(Direction(sysfs_gpio::Direction::High)),
