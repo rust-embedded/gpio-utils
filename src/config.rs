@@ -2,7 +2,7 @@
 
 use glob::glob;
 use rustc_serialize::{Decodable, Decoder};
-use std::collections::{BTreeSet};
+use std::collections::{BTreeSet, HashMap};
 use std::fs::{self, File};
 use std::io;
 use std::io::prelude::*;
@@ -175,13 +175,28 @@ impl GpioConfig {
         GpioConfig::from_str(&contents[..])
     }
 
-    /// Merge this config with other yielding a new, merged version
+    /// Merge other into self (takes ownership of other)
     ///
     /// If in conflict, the other GPIO config takes priority.
     pub fn update(&mut self, other: GpioConfig) {
-        // TODO: This needs to actually resolve conflicts rather than
-        //   blindly writing over as it does now.
-        self.pins.extend(other.pins)
+        for other_pin in other.pins {
+            // determine the case we are dealing with
+            let existing = match self.pins.iter_mut().find(|p| p.num == other_pin.num) {
+                Some(pin) => {
+                    pin.names.extend(other_pin.names.clone());
+                    pin.direction = other_pin.direction.clone(); // TODO impl copy
+                    pin.export = other_pin.export;
+                    pin.active_low = other_pin.active_low;
+                    true
+                },
+                None => false,
+            };
+
+            if !existing {
+                self.pins.push(other_pin);
+            }
+
+        }
     }
 }
 
@@ -192,12 +207,9 @@ mod test {
     use std::collections::BTreeSet;
     use sysfs_gpio::Direction as D;
 
-    #[test]
-    fn test_parse_basic() {
-        let configstr = r#"
+    static BASIC_CFG: &'static str = r#"
 # Basic Form
 [[pins]]
-
 num = 73
 names = ["reset_button"]
 direction = "in"   # default: in
@@ -209,12 +221,54 @@ num = 37
 names = ["status_led", "A27", "green_led"]
 direction = "out"
 "#;
-        let config = GpioConfig::from_str(configstr).unwrap();
+
+    static COMPACT_CFG: &'static str = r#"
+pins = [
+   { num = 73, names = ["reset_button"], direction = "in", active_low = true, export = true},
+   { num = 37, names = ["status_led", "A27", "green_led"], direction = "out"},
+]
+"#;
+
+    static MISSING_PINNUM_CFG: &'static str = r#"
+[[pins]]
+export = true
+"#;
+
+    static PARTIALLY_OVERLAPS_BASIC_CFG: &'static str = r#"
+# Add a new alias to pin 73
+[[pins]]
+num = 73
+names = ["new_name"]
+
+
+# Change pin 37 to be an input (not output)
+[[pins]]
+num = 37
+direction = "in"
+
+# New pin 88
+[[pins]]
+num = 88
+names = ["wildcard"]
+"#;
+
+    #[test]
+    fn test_parse_basic() {
+        let config = GpioConfig::from_str(BASIC_CFG).unwrap();
         let status_led = config.pins.get(1).unwrap();
         let names = BTreeSet::from_iter(
             vec!(String::from("status_led"),
                  String::from("A27"),
                  String::from("green_led")));
+
+        let reset_button = config.pins.get(0).unwrap();
+        assert_eq!(reset_button.num, 73);
+        assert_eq!(reset_button.names,
+                   BTreeSet::from_iter(vec!(String::from("reset_button"))));
+        assert_eq!(reset_button.direction, D::In);
+        assert_eq!(reset_button.active_low, true);
+        assert_eq!(reset_button.export, true);
+
         assert_eq!(status_led.names, names);
         assert_eq!(status_led.direction, D::Out);
         assert_eq!(status_led.active_low, false);
@@ -223,13 +277,7 @@ direction = "out"
 
     #[test]
     fn test_parser_compact() {
-        let configstr = r#"
-pins = [
-   { num = 73, names = ["reset_button"], direction = "in", active_low = true, export = true},
-   { num = 37, names = ["status_led", "A27", "green_led"], direction = "out"},
-]
-"#;
-        let config = GpioConfig::from_str(configstr).unwrap();
+        let config = GpioConfig::from_str(COMPACT_CFG).unwrap();
         let status_led = config.pins.get(1).unwrap();
         let names = BTreeSet::from_iter(
             vec!(String::from("status_led"),
@@ -252,11 +300,7 @@ pins = [
 
     #[test]
     fn test_parser_missing_pinnum() {
-        let configstr = r#"
-[[pins]]
-export = true
-"#;
-        match GpioConfig::from_str(configstr) {
+        match GpioConfig::from_str(MISSING_PINNUM_CFG) {
             Err(Error::DecodingError(_)) => {},
             _ => panic!("Expected a decoding error"),
         }
@@ -265,12 +309,42 @@ export = true
     #[test]
     fn test_parse_error_bad_toml() {
         // basically, just garbage data
-        let configstr = r#"
-[] -*-..asdf=-=-@#$%^&*()
-"#;
+        let configstr = r"[] -*-..asdf=-=-@#$%^&*()";
         match GpioConfig::from_str(configstr) {
             Err(Error::ParserErrors(e)) => {},
             _ => panic!("Did not receive parse error when expected"),
         }
+    }
+
+    #[test]
+    fn test_merge_configs() {
+        let mut config = GpioConfig::from_str(BASIC_CFG).unwrap();
+        let cfg2 = GpioConfig::from_str(PARTIALLY_OVERLAPS_BASIC_CFG).unwrap();
+
+        // perform the merge
+        config.update(cfg2);
+
+        let reset_button = config.pins.get(0).unwrap();
+        assert_eq!(reset_button.num, 73);
+        assert_eq!(reset_button.names, BTreeSet::from_iter(
+            vec!(String::from("reset_button"),
+                 String::from("new_name"))));
+        assert_eq!(reset_button.direction, D::In);
+        assert_eq!(reset_button.active_low, false);
+        assert_eq!(reset_button.export, true);
+
+        let status_led = config.pins.get(1).unwrap();
+        let names = BTreeSet::from_iter(
+            vec!(String::from("status_led"),
+                 String::from("A27"),
+                 String::from("green_led")));
+        assert_eq!(status_led.names, names);
+        assert_eq!(status_led.direction, D::In);
+        assert_eq!(status_led.active_low, false);
+        assert_eq!(status_led.export, true);
+
+        let wildcard = config.pins.get(2).unwrap();
+        assert_eq!(wildcard.num, 88);
+        assert_eq!(wildcard.names, BTreeSet::from_iter(vec!(String::from("wildcard"))));
     }
 }
