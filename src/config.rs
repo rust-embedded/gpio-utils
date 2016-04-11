@@ -3,12 +3,15 @@
 use glob::glob;
 use rustc_serialize::{Decodable, Decoder};
 use std::collections::BTreeSet;
+use std::fmt;
 use std::fs::{self, File};
 use std::io;
 use std::io::prelude::*;
 use std::path::Path;
 use sysfs_gpio;
 use toml;
+
+const DEFAULT_SYMLINK_ROOT: &'static str = "/var/run/gpio";
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Direction(pub sysfs_gpio::Direction);
@@ -28,9 +31,10 @@ pub struct PinConfig {
     pub active_low: bool,
 }
 
-#[derive(RustcDecodable, Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct GpioConfig {
-    pub pins: Vec<PinConfig>,
+    pins: Vec<PinConfig>,
+    symlink_root: Option<String>,
 }
 
 #[derive(Debug)]
@@ -39,6 +43,22 @@ pub enum Error {
     ParserErrors(Vec<toml::ParserError>),
     DecodingError(toml::DecodeError),
     NoConfigFound,
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Error::IoError(ref e) => e.fmt(f),
+            Error::ParserErrors(ref errors) => {
+                for e in errors {
+                    try!(e.fmt(f));
+                }
+                Ok(())
+            }
+            Error::DecodingError(ref e) => e.fmt(f),
+            Error::NoConfigFound => write!(f, "No Config Found"),
+        }
+    }
 }
 
 impl From<io::Error> for Error {
@@ -59,19 +79,37 @@ impl From<toml::DecodeError> for Error {
     }
 }
 
+impl Decodable for GpioConfig {
+    fn decode<D: Decoder>(d: &mut D) -> Result<Self, D::Error> {
+        // Get items under the [config] header if present
+        let symlink_root: Option<String> = d.read_struct_field("config", 0, |cfg| {
+                                                cfg.read_struct_field("symlink_root",
+                                                                      0,
+                                                                      Decodable::decode)
+                                            })
+                                            .ok();
+
+        Ok(GpioConfig {
+            pins: try!(d.read_struct_field("pins", 0, Decodable::decode)),
+            symlink_root: symlink_root,
+        })
+    }
+}
+
 impl Decodable for PinConfig {
     fn decode<D: Decoder>(d: &mut D) -> Result<PinConfig, D::Error> {
         Ok(PinConfig {
             num: try!(d.read_struct_field("num", 0, Decodable::decode)),
             direction: d.read_struct_field("direction", 0, |dir_d| {
-                match &try!(dir_d.read_str())[..] {
-                    "in" => Ok(sysfs_gpio::Direction::In),
-                    "out" => Ok(sysfs_gpio::Direction::Out),
-                    "high" => Ok(sysfs_gpio::Direction::High),
-                    "low" => Ok(sysfs_gpio::Direction::Low),
-                    _ => Err(dir_d.error("Expected one of: {in, out, high, low}")),
-                }
-            }).unwrap_or(sysfs_gpio::Direction::In), // default: In
+                            match &try!(dir_d.read_str())[..] {
+                                "in" => Ok(sysfs_gpio::Direction::In),
+                                "out" => Ok(sysfs_gpio::Direction::Out),
+                                "high" => Ok(sysfs_gpio::Direction::High),
+                                "low" => Ok(sysfs_gpio::Direction::Low),
+                                _ => Err(dir_d.error("Expected one of: {in, out, high, low}")),
+                            }
+                        })
+                        .unwrap_or(sysfs_gpio::Direction::In), // default: In
             names: d.read_struct_field("names", 0, Decodable::decode).unwrap_or(BTreeSet::new()),
             export: d.read_struct_field("export", 0, Decodable::decode).unwrap_or(true),
             active_low: d.read_struct_field("active_low", 0, Decodable::decode).unwrap_or(false),
@@ -80,7 +118,6 @@ impl Decodable for PinConfig {
 }
 
 impl GpioConfig {
-
     /// Load a GPIO Config from the system
     ///
     /// This function will load the GPIO configuration from standard system
@@ -145,6 +182,17 @@ impl GpioConfig {
         GpioConfig::from_str(&contents[..])
     }
 
+    pub fn get_pins(&self) -> &[PinConfig] {
+        &self.pins[..]
+    }
+
+    pub fn get_symlink_root(&self) -> &str {
+        match self.symlink_root {
+            Some(ref root) => &root,
+            None => DEFAULT_SYMLINK_ROOT,
+        }
+    }
+
     /// Merge other into self (takes ownership of other)
     ///
     /// If in conflict, the other GPIO config takes priority.
@@ -158,14 +206,13 @@ impl GpioConfig {
                     pin.export = other_pin.export;
                     pin.active_low = other_pin.active_low;
                     true
-                },
+                }
                 None => false,
             };
 
             if !existing {
                 self.pins.push(other_pin);
             }
-
         }
     }
 }
@@ -177,8 +224,7 @@ mod test {
     use std::collections::BTreeSet;
     use sysfs_gpio::Direction as D;
 
-    static BASIC_CFG: &'static str = r#"
-# Basic Form
+    const BASIC_CFG: &'static str = r#"
 [[pins]]
 num = 73
 names = ["reset_button"]
@@ -192,19 +238,22 @@ names = ["status_led", "A27", "green_led"]
 direction = "out"
 "#;
 
-    static COMPACT_CFG: &'static str = r#"
+    const COMPACT_CFG: &'static str = r#"
 pins = [
    { num = 73, names = ["reset_button"], direction = "in", active_low = true, export = true},
    { num = 37, names = ["status_led", "A27", "green_led"], direction = "out"},
 ]
+
+[config]
+symlink_root = "/tmp/gpio"
 "#;
 
-    static MISSING_PINNUM_CFG: &'static str = r#"
+    const MISSING_PINNUM_CFG: &'static str = r#"
 [[pins]]
 export = true
 "#;
 
-    static PARTIALLY_OVERLAPS_BASIC_CFG: &'static str = r#"
+    const PARTIALLY_OVERLAPS_BASIC_CFG: &'static str = r#"
 # Add a new alias to pin 73
 [[pins]]
 num = 73
@@ -226,15 +275,16 @@ names = ["wildcard"]
     fn test_parse_basic() {
         let config = GpioConfig::from_str(BASIC_CFG).unwrap();
         let status_led = config.pins.get(1).unwrap();
-        let names = BTreeSet::from_iter(
-            vec!(String::from("status_led"),
-                 String::from("A27"),
-                 String::from("green_led")));
+        let names = BTreeSet::from_iter(vec![String::from("status_led"),
+                                             String::from("A27"),
+                                             String::from("green_led")]);
+
+        assert_eq!(config.get_symlink_root(), "/var/run/gpio");
 
         let reset_button = config.pins.get(0).unwrap();
         assert_eq!(reset_button.num, 73);
         assert_eq!(reset_button.names,
-                   BTreeSet::from_iter(vec!(String::from("reset_button"))));
+                   BTreeSet::from_iter(vec![String::from("reset_button")]));
         assert_eq!(reset_button.direction, D::In);
         assert_eq!(reset_button.active_low, true);
         assert_eq!(reset_button.export, true);
@@ -249,21 +299,21 @@ names = ["wildcard"]
     fn test_parser_compact() {
         let config = GpioConfig::from_str(COMPACT_CFG).unwrap();
         let status_led = config.pins.get(1).unwrap();
-        let names = BTreeSet::from_iter(
-            vec!(String::from("status_led"),
-                 String::from("A27"),
-                 String::from("green_led")));
+        let names = BTreeSet::from_iter(vec![String::from("status_led"),
+                                             String::from("A27"),
+                                             String::from("green_led")]);
         assert_eq!(status_led.names, names);
         assert_eq!(status_led.direction, D::Out);
         assert_eq!(status_led.active_low, false);
         assert_eq!(status_led.export, true);
+        assert_eq!(config.get_symlink_root(), "/tmp/gpio")
     }
 
     #[test]
     fn test_parser_empty_toml() {
         let configstr = "";
         match GpioConfig::from_str(configstr) {
-            Ok(pins) => { assert_eq!(pins.pins, vec!()) },
+            Ok(pins) => assert_eq!(pins.pins, vec![]),
             _ => panic!("Expected a decoding error"),
         }
     }
@@ -271,7 +321,7 @@ names = ["wildcard"]
     #[test]
     fn test_parser_missing_pinnum() {
         match GpioConfig::from_str(MISSING_PINNUM_CFG) {
-            Err(Error::DecodingError(_)) => {},
+            Err(Error::DecodingError(_)) => {}
             _ => panic!("Expected a decoding error"),
         }
     }
@@ -281,7 +331,7 @@ names = ["wildcard"]
         // basically, just garbage data
         let configstr = r"[] -*-..asdf=-=-@#$%^&*()";
         match GpioConfig::from_str(configstr) {
-            Err(Error::ParserErrors(_)) => {},
+            Err(Error::ParserErrors(_)) => {}
             _ => panic!("Did not receive parse error when expected"),
         }
     }
@@ -296,18 +346,17 @@ names = ["wildcard"]
 
         let reset_button = config.pins.get(0).unwrap();
         assert_eq!(reset_button.num, 73);
-        assert_eq!(reset_button.names, BTreeSet::from_iter(
-            vec!(String::from("reset_button"),
-                 String::from("new_name"))));
+        assert_eq!(reset_button.names,
+                   BTreeSet::from_iter(vec![String::from("reset_button"),
+                                            String::from("new_name")]));
         assert_eq!(reset_button.direction, D::In);
         assert_eq!(reset_button.active_low, false);
         assert_eq!(reset_button.export, true);
 
         let status_led = config.pins.get(1).unwrap();
-        let names = BTreeSet::from_iter(
-            vec!(String::from("status_led"),
-                 String::from("A27"),
-                 String::from("green_led")));
+        let names = BTreeSet::from_iter(vec![String::from("status_led"),
+                                             String::from("A27"),
+                                             String::from("green_led")]);
         assert_eq!(status_led.names, names);
         assert_eq!(status_led.direction, D::In);
         assert_eq!(status_led.active_low, false);
@@ -315,6 +364,7 @@ names = ["wildcard"]
 
         let wildcard = config.pins.get(2).unwrap();
         assert_eq!(wildcard.num, 88);
-        assert_eq!(wildcard.names, BTreeSet::from_iter(vec!(String::from("wildcard"))));
+        assert_eq!(wildcard.names,
+                   BTreeSet::from_iter(vec![String::from("wildcard")]));
     }
 }
