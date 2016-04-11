@@ -197,6 +197,10 @@ impl GpioConfig {
     ///
     /// If in conflict, the other GPIO config takes priority.
     pub fn update(&mut self, other: GpioConfig) {
+        if let Some(symlink_root) = other.symlink_root {
+            self.symlink_root = Some(symlink_root);
+        }
+
         for other_pin in other.pins {
             // determine the case we are dealing with
             let existing = match self.pins.iter_mut().find(|p| p.num == other_pin.num) {
@@ -254,6 +258,9 @@ export = true
 "#;
 
     const PARTIALLY_OVERLAPS_BASIC_CFG: &'static str = r#"
+[config]
+symlink_root = "/foo/bar/baz"
+
 # Add a new alias to pin 73
 [[pins]]
 num = 73
@@ -343,6 +350,8 @@ names = ["wildcard"]
 
         // perform the merge
         config.update(cfg2);
+
+        assert_eq!(config.get_symlink_root(), "/foo/bar/baz");
 
         let reset_button = config.pins.get(0).unwrap();
         assert_eq!(reset_button.num, 73);
