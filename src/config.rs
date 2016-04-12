@@ -2,7 +2,7 @@
 
 use glob::glob;
 use rustc_serialize::{Decodable, Decoder};
-use std::collections::BTreeSet;
+use std::collections::{HashMap, BTreeSet};
 use std::fmt;
 use std::fs::{self, File};
 use std::io;
@@ -43,6 +43,7 @@ pub enum Error {
     ParserErrors(Vec<toml::ParserError>),
     DecodingError(toml::DecodeError),
     NoConfigFound,
+    DuplicateNames(String),
 }
 
 impl fmt::Display for Error {
@@ -57,6 +58,7 @@ impl fmt::Display for Error {
             }
             Error::DecodingError(ref e) => e.fmt(f),
             Error::NoConfigFound => write!(f, "No Config Found"),
+            Error::DuplicateNames(ref e) => e.fmt(f),
         }
     }
 }
@@ -118,6 +120,28 @@ impl Decodable for PinConfig {
 }
 
 impl GpioConfig {
+    /// Validate invariants on the config that cannot easily be done earlier
+    ///
+    /// Currently, this just checks that there are no duplicated names between
+    /// different pins in the config
+    fn validate(&self) -> Result<(), Error> {
+        let mut all_names: HashMap<&str, &PinConfig> = HashMap::new();
+        for pin in &self.pins {
+            for name in &pin.names {
+                if let Some(other_pin) = all_names.get(&name[..]) {
+                    return Err(Error::DuplicateNames(format!("Pins {} and {} share duplicate \
+                                                              name '{}'",
+                                                             pin.num,
+                                                             other_pin.num,
+                                                             name)));
+                }
+                all_names.insert(&name[..], pin);
+            }
+        }
+
+        Ok(())
+    }
+
     /// Load a GPIO Config from the system
     ///
     /// This function will load the GPIO configuration from standard system
@@ -158,7 +182,7 @@ impl GpioConfig {
         } else {
             let mut cfg = config_instances.remove(0);
             for higher_priority_cfg in config_instances {
-                cfg.update(higher_priority_cfg);
+                try!(cfg.update(higher_priority_cfg));
             }
             Ok(cfg)
         }
@@ -168,8 +192,11 @@ impl GpioConfig {
     pub fn from_str(config: &str) -> Result<GpioConfig, Error> {
         let mut parser = toml::Parser::new(config);
         let root = try!(parser.parse().ok_or(parser.errors));
-        match Decodable::decode(&mut toml::Decoder::new(toml::Value::Table(root))) {
-            Ok(cfg) => Ok(cfg),
+        match GpioConfig::decode(&mut toml::Decoder::new(toml::Value::Table(root))) {
+            Ok(cfg) => {
+                try!(cfg.validate().or_else(|e| Err(Error::from(e))));
+                Ok(cfg)
+            },
             Err(e) => Err(Error::from(e)),
         }
     }
@@ -179,7 +206,9 @@ impl GpioConfig {
         let mut contents = String::new();
         let mut f = try!(File::open(path));
         try!(f.read_to_string(&mut contents));
-        GpioConfig::from_str(&contents[..])
+        let config = try!(GpioConfig::from_str(&contents[..]));
+        try!(config.validate());
+        Ok(config)
     }
 
     /// Get the pin with the provided name if present in this configuration
@@ -203,7 +232,7 @@ impl GpioConfig {
     /// Merge other into self (takes ownership of other)
     ///
     /// If in conflict, the other GPIO config takes priority.
-    pub fn update(&mut self, other: GpioConfig) {
+    pub fn update(&mut self, other: GpioConfig) -> Result<(), Error> {
         if let Some(symlink_root) = other.symlink_root {
             self.symlink_root = Some(symlink_root);
         }
@@ -225,6 +254,9 @@ impl GpioConfig {
                 self.pins.push(other_pin);
             }
         }
+
+        // validate the resulting structure
+        self.validate()
     }
 }
 
@@ -262,6 +294,16 @@ symlink_root = "/tmp/gpio"
     const MISSING_PINNUM_CFG: &'static str = r#"
 [[pins]]
 export = true
+"#;
+
+    const DUPLICATED_NAMES_CFG: &'static str = r#"
+[[pins]]
+num = 25
+names = ["foo", "bar"]
+
+[[pins]]
+num = 26
+names = ["baz", "foo"]  # foo is repeated!
 "#;
 
     const PARTIALLY_OVERLAPS_BASIC_CFG: &'static str = r#"
@@ -364,12 +406,20 @@ names = ["wildcard"]
     }
 
     #[test]
+    fn test_error_on_duplicated_names() {
+        match GpioConfig::from_str(DUPLICATED_NAMES_CFG) {
+            Err(Error::DuplicateNames(_)) => (),
+            r => panic!("Expected DuplicateNames Error, got {:?}", r),
+        }
+    }
+
+    #[test]
     fn test_merge_configs() {
         let mut config = GpioConfig::from_str(BASIC_CFG).unwrap();
         let cfg2 = GpioConfig::from_str(PARTIALLY_OVERLAPS_BASIC_CFG).unwrap();
 
         // perform the merge
-        config.update(cfg2);
+        config.update(cfg2).unwrap();
 
         assert_eq!(config.get_symlink_root(), "/foo/bar/baz");
 
