@@ -2,6 +2,7 @@
 
 use std::path;
 use std::os::unix::fs;
+use std::io::ErrorKind;
 use config::PinConfig;
 use sysfs_gpio;
 
@@ -25,7 +26,15 @@ pub fn export(pin: &PinConfig, symlink_root: Option<&str>) -> Result<(), sysfs_g
         for name in &pin.names {
             let mut dst = path::PathBuf::from(symroot);
             dst.push(name);
-            try!(fs::symlink(format!("/sys/class/gpio{}", pin.num), dst));
+            try!(match fs::symlink(format!("/sys/class/gpio{}", pin.num), dst) {
+                Ok(_) => Ok(()),
+                Err(e) => {
+                    match e.kind() {
+                        ErrorKind::AlreadyExists => Ok(()),
+                        _ => Err(e),
+                    }
+                }
+            });
         }
     }
 
