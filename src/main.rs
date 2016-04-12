@@ -129,7 +129,18 @@ fn main() {
         }
         ("poll", Some(_)) => {}
         ("write", Some(_)) => {}
-        ("export", Some(_)) => {}
+        ("export", Some(m)) => {
+            let export_options = GpioExportOptions {
+                gpio_opts: gpio_options,
+                pin: String::from(m.value_of("pin").unwrap()),
+                symlink_root: match m.value_of("symlink-root") {
+                    Some(slr) => Some(String::from(slr)),
+                    None => None,
+                },
+            };
+
+            gpio_export::main(&cfg, &export_options);
+        }
         ("export-all", Some(m)) => {
             let exportall_options = GpioExportAllOptions {
                 gpio_opts: gpio_options,

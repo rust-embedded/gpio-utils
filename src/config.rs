@@ -213,7 +213,16 @@ impl GpioConfig {
 
     /// Get the pin with the provided name if present in this configuration
     pub fn get_pin(&self, name: &str) -> Option<&PinConfig> {
-        self.pins.iter().find(|p| p.names.contains(name))
+        // first, try to find pin by name
+        if let Some(pin) = self.pins.iter().find(|p| p.names.contains(name)) {
+            return Some(pin)
+        }
+
+        // Try to parse the name as a 64-bit integer and match against that
+        match name.parse::<u64>() {
+            Ok(pin_num) => self.pins.iter().find(|p| p.num == pin_num),
+            Err(_) => None,
+        }
     }
 
     /// Get a reference to all the pins in this config
@@ -362,6 +371,19 @@ names = ["wildcard"]
     fn test_get_pin_not_present() {
         let config = GpioConfig::from_str(BASIC_CFG).unwrap();
         assert_eq!(config.get_pin("missing"), None);
+    }
+
+    #[test]
+    fn test_get_pin_by_number() {
+        let config = GpioConfig::from_str(BASIC_CFG).unwrap();
+        let status_led = config.get_pin("37").unwrap();
+        assert_eq!(status_led.num, 37);
+    }
+
+    #[test]
+    fn test_get_pin_by_number_not_found() {
+        let config = GpioConfig::from_str(BASIC_CFG).unwrap();
+        assert_eq!(config.get_pin("64"), None);
     }
 
     #[test]

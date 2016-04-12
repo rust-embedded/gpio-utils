@@ -6,17 +6,16 @@ use std::process::exit;
 use export;
 
 pub fn main(config: &GpioConfig, opts: &GpioExportAllOptions) {
+    let symlink_root = match opts.symlink_root {
+        Some(ref slr) => &slr[..],
+        None => config.get_symlink_root(),
+    };
+
     for pin in config.get_pins() {
-        let symlink_root = opts.symlink_root
-                               .clone()
-                               .unwrap_or(String::from(config.get_symlink_root()));
-        match export::export(pin, Some(&symlink_root[..])) {
-            Ok(_) => {}
-            Err(e) => {
-                println!("Error occurred while exporting pin: {:?}", pin);
-                println!("{}", e);
-                exit(1);
-            }
+        if let Err(e) = export::export(pin, Some(symlink_root)) {
+            println!("Error occurred while exporting pin: {:?}", pin);
+            println!("{}", e);
+            exit(1);
         }
     }
 }
