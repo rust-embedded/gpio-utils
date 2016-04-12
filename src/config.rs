@@ -182,10 +182,17 @@ impl GpioConfig {
         GpioConfig::from_str(&contents[..])
     }
 
+    /// Get the pin with the provided name if present in this configuration
+    pub fn get_pin(&self, name: &str) -> Option<&PinConfig> {
+        self.pins.iter().find(|p| p.names.iter().any(|n| n == name))
+    }
+
+    /// Get a reference to all the pins in this config
     pub fn get_pins(&self) -> &[PinConfig] {
         &self.pins[..]
     }
 
+    /// Get the symlink root specified in the config (or the default)
     pub fn get_symlink_root(&self) -> &str {
         match self.symlink_root {
             Some(ref root) => &root,
@@ -300,6 +307,19 @@ names = ["wildcard"]
         assert_eq!(status_led.direction, D::Out);
         assert_eq!(status_led.active_low, false);
         assert_eq!(status_led.export, true);
+    }
+
+    #[test]
+    fn test_get_pin_present() {
+        let config = GpioConfig::from_str(BASIC_CFG).unwrap();
+        let status_led = config.get_pin("status_led").unwrap();
+        assert_eq!(status_led.num, 37);
+    }
+
+    #[test]
+    fn test_get_pin_not_present() {
+        let config = GpioConfig::from_str(BASIC_CFG).unwrap();
+        assert_eq!(config.get_pin("missing"), None);
     }
 
     #[test]
