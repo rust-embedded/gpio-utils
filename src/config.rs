@@ -184,7 +184,7 @@ impl GpioConfig {
 
     /// Get the pin with the provided name if present in this configuration
     pub fn get_pin(&self, name: &str) -> Option<&PinConfig> {
-        self.pins.iter().find(|p| p.names.iter().any(|n| n == name))
+        self.pins.iter().find(|p| p.names.contains(name))
     }
 
     /// Get a reference to all the pins in this config
