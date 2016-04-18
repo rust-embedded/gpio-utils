@@ -125,7 +125,7 @@ fn main() {
                 gpio_opts: gpio_options,
                 pin: String::from(m.value_of("pin").unwrap()),
             };
-            gpio_read::main(&read_options);
+            gpio_read::main(&cfg, &read_options);
         }
         ("poll", Some(_)) => {}
         ("write", Some(_)) => {}

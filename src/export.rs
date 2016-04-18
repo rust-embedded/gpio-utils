@@ -1,7 +1,8 @@
 // Copyright (C) 2016, The gpio-utils Authors
 
 use std::path;
-use std::os::unix::fs;
+use std::os::unix::fs as unix_fs;
+use std::fs;
 use std::io::ErrorKind;
 use config::PinConfig;
 use sysfs_gpio;
@@ -17,16 +18,19 @@ use sysfs_gpio;
 ///
 /// If the GPIO is already exported, this function will continue
 /// without an error as the desired end state is achieved.
-pub fn export(pin: &PinConfig, symlink_root: Option<&str>) -> Result<(), sysfs_gpio::Error> {
-    let sysfs_gpio_pin = sysfs_gpio::Pin::new(pin.num);
-    try!(sysfs_gpio_pin.export());
+pub fn export(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<(), sysfs_gpio::Error> {
+    let pin = pin_config.get_pin();
+    try!(pin.export());
 
     // if there is a symlink root provided, create symlink
     if let Some(symroot) = symlink_root {
-        for name in &pin.names {
+        // create root directory if not exists
+        try!(fs::create_dir_all(symroot));
+
+        for name in &pin_config.names {
             let mut dst = path::PathBuf::from(symroot);
             dst.push(name);
-            try!(match fs::symlink(format!("/sys/class/gpio{}", pin.num), dst) {
+            try!(match unix_fs::symlink(format!("/sys/class/gpio{}", pin_config.num), dst) {
                 Ok(_) => Ok(()),
                 Err(e) => {
                     match e.kind() {

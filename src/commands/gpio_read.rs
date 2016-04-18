@@ -4,14 +4,18 @@ use options::{GpioReadOptions};
 use config::GpioConfig;
 use std::process::exit;
 
-pub fn main(opts: &GpioReadOptions) {
-    let config = match GpioConfig::load(&opts.gpio_opts.configs[..]) {
-        Ok(config) => config,
-        Err(e) => {
-            println!("Error: {:?}", e);
-            exit(1);
+pub fn main(config: &GpioConfig, opts: &GpioReadOptions) {
+    let pin_config = match config.get_pin(&opts.pin[..]) {
+        Some(pin) => pin,
+        None => {
+            println!("Unable to find config entry for pin '{}'", opts.pin);
+            exit(1)
         }
     };
 
-    println!("config: {:?}", config);
+    let pin = pin_config.get_pin();
+    match pin.get_value() {
+        Ok(value) => println!("{}", value),
+        Err(e) => println!("ERROR: {:?}", e),
+    }
 }

@@ -119,6 +119,14 @@ impl Decodable for PinConfig {
     }
 }
 
+impl PinConfig {
+
+    /// Get the `sysfs_gpio::Pin` to go along with this config`
+    pub fn get_pin(&self) -> sysfs_gpio::Pin {
+        sysfs_gpio::Pin::new(self.num)
+    }
+}
+
 impl GpioConfig {
     /// Validate invariants on the config that cannot easily be done earlier
     ///

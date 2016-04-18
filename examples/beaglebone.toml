@@ -1,0 +1,287 @@
+#
+# Pin Map for BeagleBone Black
+#
+# This file exports all pins as GPIOs by default.  If you
+# do not want this, you will need to override that behavior
+# by setting `export=false` in another toml file.
+#
+# We also do not know how you will be using various pins, so
+# any that are exported will be exported as inputs by unless
+# you override this in your own toml file.
+#
+
+################################################################################
+# P9 Header
+################################################################################
+
+[[pins]]
+num = 30
+names = ["GPIO30", "GPIO0_30", "P9_11", "UART4_RX"]
+
+[[pins]]
+num = 60
+names = ["GPIO_60", "GPIO1_28", "P9_12"]
+
+[[pins]]
+num = 31
+names = ["GPIO_31", "GPIO0_31", "P9_13", "UART4_TX"]
+
+[[pins]]
+num = 40
+names = ["GPIO40", "GPIO1_18", "P9_14", "EHRPWM1A"]
+
+[[pins]]
+num = 48
+names = ["GPIO_48", "GPIO1_16", "P9_15", "PWM_TRIPZ_IN"]
+
+[[pins]]
+num = 51
+names = ["GPIO_51", "GPIO1_19", "P9_16", "EHRPWM1B"]
+
+[[pins]]
+num = 5
+names = ["GPIO_5", "GPIO0_5", "P9_17", "I2C1_SCL"]
+
+[[pins]]
+num = 4
+names = ["GPIO_4", "GPIO0_4", "P9_18", "I2C1_SDA"]
+
+[[pins]]
+num = 13
+names = ["GPIO_13", "GPIO0_13", "P9_19", "I2C2_SCL"]
+
+[[pins]]
+num = 12
+names = ["GPIO_12", "GPIO0_12", "P9_20", "I2C2_SDA"]
+
+[[pins]]
+num = 3
+names = ["GPIO_3", "GPIO0_3", "P9_21", "UART2_TX", "EHRPWMB"]
+
+[[pins]]
+num = 2
+names = ["GPIO_2", "GPIO0_2", "P9_22", "UART2_RX"]
+
+[[pins]]
+num = 49
+names = ["GPIO_49", "GPIO01_17", "P9_23", "EHRPWM0A"]
+
+[[pins]]
+num = 15
+names = ["GPIO_15", "GPIO0_15", "P9_24", "SER1_TX"]
+
+[[pins]]
+num = 117
+names = ["GPIO_117", "GPIO3_21", "P9_25"]
+
+[[pins]]
+num = 14
+names = ["GPIO_14", "GPIO0_14", "P9_26", "SER"]
+
+[[pins]]
+num = 115
+names = ["GPIO_115", "GPIO3_19", "P9_27", "eQEP0B"]
+
+[[pins]]
+num = 113
+names = ["GPIO_113", "GPIO3_17", "P9_28", "SPI1_CS0"]
+
+[[pins]]
+num = 111
+names = ["GPIO_111", "GPIO3_15", "P9_29", "SPI1_MISO"]
+
+[[pins]]
+num = 112
+names = ["GPIO_112", "GPIO3_14", "P9_30", "SPI1_D1"]
+
+[[pins]]
+num = 110
+names = ["GPIO_110", "GPIO3_12", "P9_31", "SPI1_SCLK"]
+
+[[pins]]
+num = 20
+names = ["GPIO_20", "GPIO0_20", "P9_41", "CLKOUT2"]
+
+[[pins]]
+num = 7
+names = ["GPIO_7", "GPIO0_7", "P9_42", "ECAPPPWM0"]
+
+################################################################################
+# P8 Header
+################################################################################
+
+[[pins]]
+num = 38
+names = ["GPIO_38", "GPIO1_6", "P8_3", "MMC1_DAT6"]
+
+[[pins]]
+num = 39
+names = ["GPIO_39", "GPIO1_7", "P8_4", "MMC1_DAT7"]
+
+[[pins]]
+num = 34
+names = ["GPIO_34", "GPIO1_2", "P8_5", "MMC1_DAT2"]
+
+[[pins]]
+num = 35
+names = ["GPIO_35", "GPIO1_3", "P8_6", "MMC1_DAT3"]
+
+[[pins]]
+num = 66
+names = ["GPIO_66", "GPIO2_2", "P8_7", "TIMER4"]
+
+[[pins]]
+num = 67
+names = ["GPIO_67", "GPIO2_3", "P8_8", "TIMER7"]
+
+[[pins]]
+num = 69
+names = ["GPIO_69", "GPIO2_5", "P8_9", "TIMER5"]
+
+[[pins]]
+num = 68
+names = ["GPIO_68", "GPIO2_4", "P8_10", "TIMER6"]
+
+[[pins]]
+num = 45
+names = ["GPIO_45", "GPIO1_13", "P8_11"]
+
+[[pins]]
+num = 44
+names = ["GPIO_44", "GPIO1_12", "P8_12"]
+
+[[pins]]
+num = 23
+names = ["GPIO_23", "GPIO0_23", "P8_13", "EHRPWM2B"]
+
+[[pins]]
+num = 26
+names = ["GPIO_26", "GPIO0_26", "P8_14"]
+
+[[pins]]
+num = 47
+names = ["GPIO_47", "GPIO1_15", "P8_15"]
+
+[[pins]]
+num = 46
+names = ["GPIO_46", "GPIO1_14", "P8_16"]
+
+[[pins]]
+num = 27
+names = ["GPIO_27", "GPIO0_27", "P8_17", "PWM0_SYNC0"]
+
+[[pins]]
+num = 65
+names = ["GPIO_65", "GPIO2_1", "P8_18"]
+
+[[pins]]
+num = 22
+names = ["GPIO_22", "GPIO0_22", "P8_19", "EHRPPWM2A"]
+
+[[pins]]
+num = 63
+names = ["GPIO_63", "GPIO1_31", "P8_20", "MMC1_CMD"]
+
+[[pins]]
+num = 62
+names = ["GPIO_62", "GPIO1_30", "P8_21", "MMC1_CLK"]
+
+[[pins]]
+num = 37
+names = ["GPIO_37", "GPIO1_5", "P8_22", "MMC1_DAT5"]
+
+[[pins]]
+num = 36
+names = ["GPIO_36", "GPIO1_4", "P8_23", "MMC1_DAT4"]
+
+[[pins]]
+num = 33
+names = ["GPIO_33", "GPIO1_1", "P8_24", "MMC1_DAT1"]
+
+[[pins]]
+num = 32
+names = ["GPIO_32", "GPIO1_0", "P8_25", "MMC1_DAT0"]
+
+[[pins]]
+num = 61
+names = ["GPIO_61", "GPIO1_29", "P8_26"]
+
+[[pins]]
+num = 86
+names = ["GPIO_86", "GPIO2_22", "P8_27", "LCD_VSYNC"]
+
+[[pins]]
+num = 88
+names = ["GPIO_88", "GPIO2_24", "P8_28", "LCD_PCLK"]
+
+[[pins]]
+num = 87
+names = ["GPIO_87", "GPIO2_23", "P8_29", "LCD_HSYNC"]
+
+[[pins]]
+num = 89
+names = ["GPIO_89", "GPIO2_25", "P8_30", "LCD_AC_BIAS"]
+
+[[pins]]
+num = 10
+names = ["GPIO_10", "GPIO0_10", "P8_31", "LCD_DATA14", "UART5_CTS"]
+
+[[pins]]
+num = 11
+names = ["GPIO_11", "GPIO0_11", "P8_32", "LCD_DATA15", "UART5_RTS"]
+
+[[pins]]
+num = 9
+names = ["GPIO_9", "GPIO0_9", "P8_33", "LCD_DATA13", "UART4_RTS"]
+
+[[pins]]
+num = 81
+names = ["GPIO_81", "GPIO2_17", "P8_34", "LCD_DATA11", "EHRPWM1B_2"]
+
+[[pins]]
+num = 8
+names = ["GPIO_8", "GPIO0_8", "P8_35", "LCD_DATA12", "UART4_CTS"]
+
+[[pins]]
+num = 80
+names = ["GPIO_80", "GPIO2_16", "P8_36", "LCD_DATA10", "EHRPWM1A_2"]
+
+[[pins]]
+num = 78
+names = ["GPIO_78", "GPIO2_14", "P8_37", "LCD_DATA8", "UART5_TX"]
+
+[[pins]]
+num = 79
+names = ["GPIO_79", "GPIO2_15", "P8_38", "LCD_DATA9", "UART5_RX"]
+
+[[pins]]
+num = 76
+names = ["GPIO_76", "GPIO2_12", "P8_39", "LCD_DATA6"]
+
+[[pins]]
+num = 77
+names = ["GPIO_77", "GPIO2_13", "P8_40", "LCD_DATA7"]
+
+[[pins]]
+num = 74
+names = ["GPIO_74", "GPIO2_10", "P8_41", "LCD_DATA4"]
+
+[[pins]]
+num = 75
+names = ["GPIO_75", "GPIO2_11", "P8_42", "LCD_DATA5"]
+
+[[pins]]
+num = 72
+names = ["GPIO_72", "GPIO2_8", "P8_43", "LCD_DATA2"]
+
+[[pins]]
+num = 73
+names = ["GPIO_73", "GPIO2_9", "P8_44", "LCD_DATA3"]
+
+[[pins]]
+num = 70
+names = ["GPIO_70", "GPIO2_6", "P8_45", "LCD_DATA0", "EHRPWM2A_2"]
+
+[[pins]]
+num = 71
+names = ["GPIO_71", "GPIO2_7", "P8_46", "LCD_DATA1", "EHRPWM2B_2"]
