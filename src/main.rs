@@ -11,6 +11,7 @@ use clap::{Arg, App, SubCommand, AppSettings};
 use gpio_utils::options::*;
 use gpio_utils::commands::*;
 use gpio_utils::config::{self, GpioConfig};
+use std::process::exit;
 
 fn main() {
     env_logger::init().unwrap();
@@ -51,6 +52,10 @@ fn main() {
                     .arg(Arg::with_name("pin")
                          .help("The pin name (or number)")
                          .index(1)
+                         .required(true))
+                    .arg(Arg::with_name("value")
+                         .help("Value to write to pin (0|1)")
+                         .index(2)
                          .required(true)))
 
         // gpio export
@@ -128,7 +133,21 @@ fn main() {
             gpio_read::main(&cfg, &read_options);
         }
         ("poll", Some(_)) => {}
-        ("write", Some(_)) => {}
+        ("write", Some(m)) => {
+            let write_options = GpioWriteOptions {
+                gpio_opts: gpio_options,
+                pin: String::from(m.value_of("pin").unwrap()),
+                value: match m.value_of("value").unwrap().parse::<u8>() {
+                    Ok(value) => value,
+                    Err(_) => {
+                        println!("Provided value {:?} is not valid",
+                                 m.value_of("value").unwrap());
+                        exit(1);
+                    }
+                },
+            };
+            gpio_write::main(&cfg, &write_options);
+        }
         ("export", Some(m)) => {
             let export_options = GpioExportOptions {
                 gpio_opts: gpio_options,
@@ -138,7 +157,6 @@ fn main() {
                     None => None,
                 },
             };
-
             gpio_export::main(&cfg, &export_options);
         }
         ("export-all", Some(m)) => {
@@ -149,7 +167,6 @@ fn main() {
                     None => None,
                 },
             };
-
             gpio_exportall::main(&cfg, &exportall_options);
         }
         ("unexport", Some(_)) => {}

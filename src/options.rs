@@ -15,6 +15,7 @@ pub struct GpioReadOptions {
 pub struct GpioWriteOptions {
     pub gpio_opts: GpioOptions,
     pub pin: String,
+    pub value: u8,
 }
 
 #[derive(Debug)]
