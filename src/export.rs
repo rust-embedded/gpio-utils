@@ -27,6 +27,10 @@ pub fn export(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<(), 
         // create root directory if not exists
         try!(fs::create_dir_all(symroot));
 
+        // set the pin direction
+        try!(pin_config.get_pin().set_direction(pin_config.direction.clone()));
+
+        // create symlink for each name
         for name in &pin_config.names {
             let mut dst = path::PathBuf::from(symroot);
             dst.push(name);
