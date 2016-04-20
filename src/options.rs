@@ -15,6 +15,7 @@ pub struct GpioReadOptions {
 pub struct GpioWriteOptions {
     pub gpio_opts: GpioOptions,
     pub pin: String,
+    pub value: u8,
 }
 
 #[derive(Debug)]
@@ -26,12 +27,14 @@ pub struct GpioPollOptions {
 #[derive(Debug)]
 pub struct GpioExportOptions {
     pub gpio_opts: GpioOptions,
+    pub symlink_root: Option<String>,
     pub pin: String,
 }
 
 #[derive(Debug)]
 pub struct GpioExportAllOptions {
     pub gpio_opts: GpioOptions,
+    pub symlink_root: Option<String>,
 }
 
 #[derive(Debug)]
