@@ -84,12 +84,10 @@ impl From<toml::DecodeError> for Error {
 impl Decodable for GpioConfig {
     fn decode<D: Decoder>(d: &mut D) -> Result<Self, D::Error> {
         // Get items under the [config] header if present
-        let symlink_root: Option<String> = d.read_struct_field("config", 0, |cfg| {
-                                                cfg.read_struct_field("symlink_root",
-                                                                      0,
-                                                                      Decodable::decode)
-                                            })
-                                            .ok();
+        let symlink_root = d.read_struct_field("config", 0, |cfg| {
+                                cfg.read_struct_field("symlink_root", 0, Decodable::decode)
+                            })
+                            .ok();
 
         Ok(GpioConfig {
             pins: try!(d.read_struct_field("pins", 0, Decodable::decode)),
@@ -120,7 +118,6 @@ impl Decodable for PinConfig {
 }
 
 impl PinConfig {
-
     /// Get the `sysfs_gpio::Pin` to go along with this config`
     pub fn get_pin(&self) -> sysfs_gpio::Pin {
         sysfs_gpio::Pin::new(self.num)
@@ -204,7 +201,7 @@ impl GpioConfig {
             Ok(cfg) => {
                 try!(cfg.validate().or_else(|e| Err(Error::from(e))));
                 Ok(cfg)
-            },
+            }
             Err(e) => Err(Error::from(e)),
         }
     }
@@ -223,7 +220,7 @@ impl GpioConfig {
     pub fn get_pin(&self, name: &str) -> Option<&PinConfig> {
         // first, try to find pin by name
         if let Some(pin) = self.pins.iter().find(|p| p.names.contains(name)) {
-            return Some(pin)
+            return Some(pin);
         }
 
         // Try to parse the name as a 64-bit integer and match against that
