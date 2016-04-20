@@ -1,6 +1,6 @@
 // Copyright (C) 2016, Paul Osborne <osbpau@gmail.com>
 
-use options::{GpioReadOptions};
+use options::GpioReadOptions;
 use config::GpioConfig;
 use std::process::exit;
 

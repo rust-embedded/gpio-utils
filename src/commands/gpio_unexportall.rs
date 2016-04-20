@@ -1,19 +1,18 @@
-// Copyright (C) 2016, Paul Osborne <osbpau@gmail.com>
+// Copyright (C) 2016, The gpio-utils Authors
 
-use options::GpioExportAllOptions;
+use options::GpioUnexportAllOptions;
 use config::GpioConfig;
 use std::process::exit;
 use export;
 
-pub fn main(config: &GpioConfig, opts: &GpioExportAllOptions) {
+pub fn main(config: &GpioConfig, opts: &GpioUnexportAllOptions) {
     let symlink_root = match opts.symlink_root {
         Some(ref slr) => &slr[..],
         None => config.get_symlink_root(),
     };
 
-    // export all pins except those fork which export is set to false
     for pin in config.get_pins().iter().filter(|p| p.export) {
-        if let Err(e) = export::export(pin, Some(symlink_root)) {
+        if let Err(e) = export::unexport(pin, Some(symlink_root)) {
             println!("Error occurred while exporting pin: {:?}", pin);
             println!("{}", e);
             exit(1);

@@ -88,15 +88,23 @@ fn main() {
                     .arg(Arg::with_name("pin")
                          .help("The pin name (or number)")
                          .index(1)
-                         .required(true)))
+                         .required(true))
+                    .arg(Arg::with_name("symlink-root")
+                         .help("root directory for export symlinks")
+                         .takes_value(true)
+                         .short("r")
+                         .long("symlink-root")
+                         .required(false)))
 
         // gpio unexport-all
         .subcommand(SubCommand::with_name("unexport-all")
                     .about("Unexport all configured, exported GPIOs")
-                    .arg(Arg::with_name("pin")
-                         .help("The pin name (or number)")
-                         .index(1)
-                         .required(true)))
+                    .arg(Arg::with_name("symlink-root")
+                         .help("root directory for export symlinks")
+                         .takes_value(true)
+                         .short("r")
+                         .long("symlink-root")
+                         .required(false)))
 
         // gpio status
         .subcommand(SubCommand::with_name("status")
@@ -169,8 +177,21 @@ fn main() {
             };
             gpio_exportall::main(&cfg, &exportall_options);
         }
-        ("unexport", Some(_)) => {}
-        ("unexport-all", Some(_)) => {}
+        ("unexport", Some(m)) => {
+            let unexport_options = GpioUnexportOptions {
+                gpio_opts: gpio_options,
+                pin: String::from(m.value_of("pin").unwrap()),
+                symlink_root: m.value_of("symlink-root").map(|slr| String::from(slr)),
+            };
+            gpio_unexport::main(&cfg, &unexport_options);
+        }
+        ("unexport-all", Some(m)) => {
+            let unexportall_options = GpioUnexportAllOptions {
+                gpio_opts: gpio_options,
+                symlink_root: m.value_of("symlink-root").map(|slr| String::from(slr)),
+            };
+            gpio_unexportall::main(&cfg, &unexportall_options);
+        }
         ("status", Some(_)) => {}
         _ => {}
     }
