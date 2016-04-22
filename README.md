@@ -55,29 +55,27 @@ how you can configure your GPIOs.
 # the following keys:
 #
 # - `num`: Required.  The GPIO number.
+# - `names`: Required.  One or more names for the GPIO
 # - `direction`: Default: `"in"`.  Must be either "in" or "out"
-# - `active_low`: Default: `false`.  If set to true, the polatiry of the pin will
+# - `active_low`: Default: `false`.  If set to true, the polarity of the pin will
 #    be reversed.
 # - `export`: Default: `true`.  If true, this GPIO will be automatically
 #    exported when `gpio export-all` is run (e.g. by an init script).
-# - `aliases`: Additional names for the same GPIO
 #
 
-# Basic Form
-[pins.reset_button]
-num = 73           # required
-direction = "in"   # default: in
-active_low = true  # default: false
-export = true      # default: true
+[[pins]]
+num = 73                 # required
+names = ["reset_button"] # required (may have multiple)
+direction = "in"         # default: in
+active_low = false       # default: false (really means invert logic)
+export = true            # default: true
 
-[pins.status_led]
+[[pins]]
 num = 37
-aliases = ["A27", "green_led"]
+names = ["status_led", "A27", "green_led"]
 direction = "out"
 
-# Compact Form
-[pins]
-error_led = { num = 11, direction = "in", export = false}
+# ...
 ```
 
 ## Implementation Notes
