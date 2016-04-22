@@ -44,7 +44,19 @@ fn main() {
                     .arg(Arg::with_name("pin")
                          .help("The pin name (or number)")
                          .index(1)
-                         .required(true)))
+                         .required(true))
+                    .arg(Arg::with_name("timeout")
+                         .help("Timeout (in ms) for the poll operation (-1 to wait forever, default)")
+                         .takes_value(true)
+                         .short("t")
+                         .long("timeout")
+                         .required(false))
+                    .arg(Arg::with_name("edge")
+                         .help("The edge to poll on")
+                         .takes_value(true)
+                         .short("e")
+                         .long("edge")
+                         .required(false)))
 
         // gpio write
         .subcommand(SubCommand::with_name("write")
@@ -140,7 +152,21 @@ fn main() {
             };
             gpio_read::main(&cfg, &read_options);
         }
-        ("poll", Some(_)) => {}
+        ("poll", Some(m)) => {
+            let timeout = m.value_of("timeout").map(|timeout| {
+                timeout.parse::<isize>().unwrap_or_else(|_| {
+                    println!("Unable to parse timeout value {:?} as integer", timeout);
+                    exit(1);
+                })
+            });
+            let poll_options = GpioPollOptions {
+                gpio_opts: gpio_options,
+                edge: String::from(m.value_of("edge").unwrap_or("both")),
+                timeout: timeout,
+                pin: String::from(m.value_of("pin").unwrap()),
+            };
+            gpio_poll::main(&cfg, &poll_options);
+        }
         ("write", Some(m)) => {
             let write_options = GpioWriteOptions {
                 gpio_opts: gpio_options,

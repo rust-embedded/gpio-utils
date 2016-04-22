@@ -21,6 +21,8 @@ pub struct GpioWriteOptions {
 #[derive(Debug)]
 pub struct GpioPollOptions {
     pub gpio_opts: GpioOptions,
+    pub timeout: Option<isize>,
+    pub edge: String,
     pub pin: String,
 }
 

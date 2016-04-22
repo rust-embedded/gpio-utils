@@ -6,3 +6,4 @@ pub mod gpio_exportall;
 pub mod gpio_write;
 pub mod gpio_unexport;
 pub mod gpio_unexportall;
+pub mod gpio_poll;
