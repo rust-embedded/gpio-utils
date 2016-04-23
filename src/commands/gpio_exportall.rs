@@ -11,7 +11,7 @@ pub fn main(config: &GpioConfig, opts: &GpioExportAllOptions) {
         None => config.get_symlink_root(),
     };
 
-    // export all pins except those fork which export is set to false
+    // export all pins except those for which export is set to false
     for pin in config.get_pins().iter().filter(|p| p.export) {
         if let Err(e) = export::export(pin, Some(symlink_root)) {
             println!("Error occurred while exporting pin: {:?}", pin);
