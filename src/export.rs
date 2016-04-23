@@ -73,7 +73,7 @@ pub fn export(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<(), 
         for name in &pin_config.names {
             let mut dst = path::PathBuf::from(symroot);
             dst.push(name);
-            try!(match unix_fs::symlink(format!("/sys/class/gpio{}", pin_config.num), dst) {
+            try!(match unix_fs::symlink(format!("/sys/class/gpio/gpio{}", pin_config.num), dst) {
                 Ok(_) => Ok(()),
                 Err(e) => {
                     match e.kind() {
