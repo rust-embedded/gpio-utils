@@ -21,6 +21,8 @@ pub struct GpioWriteOptions {
 #[derive(Debug)]
 pub struct GpioPollOptions {
     pub gpio_opts: GpioOptions,
+    pub timeout: Option<isize>,
+    pub edge: String,
     pub pin: String,
 }
 
@@ -40,12 +42,14 @@ pub struct GpioExportAllOptions {
 #[derive(Debug)]
 pub struct GpioUnexportOptions {
     pub gpio_opts: GpioOptions,
+    pub symlink_root: Option<String>,
     pub pin: String,
 }
 
 #[derive(Debug)]
 pub struct GpioUnexportAllOptions {
     pub gpio_opts: GpioOptions,
+    pub symlink_root: Option<String>,
 }
 
 #[derive(Debug)]

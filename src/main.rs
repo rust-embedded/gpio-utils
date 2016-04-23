@@ -44,7 +44,19 @@ fn main() {
                     .arg(Arg::with_name("pin")
                          .help("The pin name (or number)")
                          .index(1)
-                         .required(true)))
+                         .required(true))
+                    .arg(Arg::with_name("timeout")
+                         .help("Timeout (in ms) for the poll operation (-1 to wait forever, default)")
+                         .takes_value(true)
+                         .short("t")
+                         .long("timeout")
+                         .required(false))
+                    .arg(Arg::with_name("edge")
+                         .help("The edge to poll on")
+                         .takes_value(true)
+                         .short("e")
+                         .long("edge")
+                         .required(false)))
 
         // gpio write
         .subcommand(SubCommand::with_name("write")
@@ -88,15 +100,23 @@ fn main() {
                     .arg(Arg::with_name("pin")
                          .help("The pin name (or number)")
                          .index(1)
-                         .required(true)))
+                         .required(true))
+                    .arg(Arg::with_name("symlink-root")
+                         .help("root directory for export symlinks")
+                         .takes_value(true)
+                         .short("r")
+                         .long("symlink-root")
+                         .required(false)))
 
         // gpio unexport-all
         .subcommand(SubCommand::with_name("unexport-all")
                     .about("Unexport all configured, exported GPIOs")
-                    .arg(Arg::with_name("pin")
-                         .help("The pin name (or number)")
-                         .index(1)
-                         .required(true)))
+                    .arg(Arg::with_name("symlink-root")
+                         .help("root directory for export symlinks")
+                         .takes_value(true)
+                         .short("r")
+                         .long("symlink-root")
+                         .required(false)))
 
         // gpio status
         .subcommand(SubCommand::with_name("status")
@@ -132,7 +152,21 @@ fn main() {
             };
             gpio_read::main(&cfg, &read_options);
         }
-        ("poll", Some(_)) => {}
+        ("poll", Some(m)) => {
+            let timeout = m.value_of("timeout").map(|timeout| {
+                timeout.parse::<isize>().unwrap_or_else(|_| {
+                    println!("Unable to parse timeout value {:?} as integer", timeout);
+                    exit(1);
+                })
+            });
+            let poll_options = GpioPollOptions {
+                gpio_opts: gpio_options,
+                edge: String::from(m.value_of("edge").unwrap_or("both")),
+                timeout: timeout,
+                pin: String::from(m.value_of("pin").unwrap()),
+            };
+            gpio_poll::main(&cfg, &poll_options);
+        }
         ("write", Some(m)) => {
             let write_options = GpioWriteOptions {
                 gpio_opts: gpio_options,
@@ -169,8 +203,21 @@ fn main() {
             };
             gpio_exportall::main(&cfg, &exportall_options);
         }
-        ("unexport", Some(_)) => {}
-        ("unexport-all", Some(_)) => {}
+        ("unexport", Some(m)) => {
+            let unexport_options = GpioUnexportOptions {
+                gpio_opts: gpio_options,
+                pin: String::from(m.value_of("pin").unwrap()),
+                symlink_root: m.value_of("symlink-root").map(|slr| String::from(slr)),
+            };
+            gpio_unexport::main(&cfg, &unexport_options);
+        }
+        ("unexport-all", Some(m)) => {
+            let unexportall_options = GpioUnexportAllOptions {
+                gpio_opts: gpio_options,
+                symlink_root: m.value_of("symlink-root").map(|slr| String::from(slr)),
+            };
+            gpio_unexportall::main(&cfg, &unexportall_options);
+        }
         ("status", Some(_)) => {}
         _ => {}
     }
