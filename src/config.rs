@@ -14,6 +14,7 @@ use std::fs::{self, File};
 use std::io;
 use std::io::prelude::*;
 use std::path::Path;
+use std::str::FromStr;
 use sysfs_gpio;
 use toml;
 
@@ -130,6 +131,23 @@ impl PinConfig {
     }
 }
 
+impl FromStr for GpioConfig {
+    type Err = Error;
+
+    /// Load a GPIO configuration for the provided toml string
+    fn from_str(config: &str) -> Result<Self, Error> {
+        let mut parser = toml::Parser::new(config);
+        let root = try!(parser.parse().ok_or(parser.errors));
+        match Self::decode(&mut toml::Decoder::new(toml::Value::Table(root))) {
+            Ok(cfg) => {
+                try!(cfg.validate().or_else(|e| Err(Error::from(e))));
+                Ok(cfg)
+            }
+            Err(e) => Err(Error::from(e)),
+        }
+    }
+}
+
 impl GpioConfig {
     /// Validate invariants on the config that cannot easily be done earlier
     ///
@@ -196,19 +214,6 @@ impl GpioConfig {
                 try!(cfg.update(higher_priority_cfg));
             }
             Ok(cfg)
-        }
-    }
-
-    /// Load a GPIO configuration for the provided toml string
-    pub fn from_str(config: &str) -> Result<GpioConfig, Error> {
-        let mut parser = toml::Parser::new(config);
-        let root = try!(parser.parse().ok_or(parser.errors));
-        match GpioConfig::decode(&mut toml::Decoder::new(toml::Value::Table(root))) {
-            Ok(cfg) => {
-                try!(cfg.validate().or_else(|e| Err(Error::from(e))));
-                Ok(cfg)
-            }
-            Err(e) => Err(Error::from(e)),
         }
     }
 
@@ -286,6 +291,7 @@ mod test {
     use std::iter::FromIterator;
     use std::collections::BTreeSet;
     use sysfs_gpio::Direction as D;
+    use std::str::FromStr;
 
     const BASIC_CFG: &'static str = r#"
 [[pins]]
