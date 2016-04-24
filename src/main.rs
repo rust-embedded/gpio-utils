@@ -213,21 +213,21 @@ fn main() {
             let unexport_options = GpioUnexportOptions {
                 gpio_opts: gpio_options,
                 pin: String::from(m.value_of("pin").unwrap()),
-                symlink_root: m.value_of("symlink-root").map(|slr| String::from(slr)),
+                symlink_root: m.value_of("symlink-root").map(String::from),
             };
             gpio_unexport::main(&cfg, &unexport_options);
         }
         ("unexport-all", Some(m)) => {
             let unexportall_options = GpioUnexportAllOptions {
                 gpio_opts: gpio_options,
-                symlink_root: m.value_of("symlink-root").map(|slr| String::from(slr)),
+                symlink_root: m.value_of("symlink-root").map(String::from),
             };
             gpio_unexportall::main(&cfg, &unexportall_options);
         }
         ("status", Some(m)) => {
             let status_options = GpioStatusOptions {
                 gpio_opts: gpio_options,
-                pin: m.value_of("pin").map(|pin| String::from(pin)),
+                pin: m.value_of("pin").map(String::from),
             };
             gpio_status::main(&cfg, &status_options);
         }
