@@ -1,5 +1,9 @@
 # Linux GPIO Utils
 
+[![Build Status](https://travis-ci.org/rust-embedded/gpio-utils.svg?branch=master)](https://travis-ci.org/rust-embedded/gpio-utils)
+[![Version](https://img.shields.io/crates/v/gpio-utils.svg?maxAge=2592000)](https://crates.io/crates/gpio-utils)
+[![License](https://img.shields.io/crates/l/rustc-serialize.svg?maxAge=2592000)](https://github.com/rust-embedded/gpio-utils/blob/master/README.md#license)
+
 GPIO Utils provides convenient access to GPIOs on a Linux system. The library
 builds on top of the sysfs interface to GPIOs exposed by the kernel and provides
 essential functionality required for most embedded systems.
