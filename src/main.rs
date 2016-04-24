@@ -218,7 +218,13 @@ fn main() {
             };
             gpio_unexportall::main(&cfg, &unexportall_options);
         }
-        ("status", Some(_)) => {}
+        ("status", Some(m)) => {
+            let status_options = GpioStatusOptions {
+                gpio_opts: gpio_options,
+                pin: m.value_of("pin").map(|pin| String::from(pin)),
+            };
+            gpio_status::main(&cfg, &status_options);
+        }
         _ => {}
     }
 }
