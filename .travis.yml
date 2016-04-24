@@ -9,4 +9,10 @@ rust:
 
 script:
   - cargo test
+  - |
+      if [ "${TRAVIS_RUST_VERSION}" = "nightly" ]; then
+         cargo install --git https://github.com/arcnmx/cargo-clippy
+         cargo clippy --lib --features lints
+         cargo clippy --bin gpio --features lints
+      fi
   - cargo doc
