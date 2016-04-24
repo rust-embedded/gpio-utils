@@ -1,0 +1,115 @@
+#
+# Pin Map for Raspberry Pi 2/3
+#
+# This file exports all pins as GPIOs by default.  If you
+# do not want this, you will need to override that behavior
+# by setting `export=false` in another toml file.
+#
+# We also do not know how you will be using various pins, so
+# any that are exported will be exported as inputs by unless
+# you override this in your own toml file.
+#
+
+[[pins]]
+num = 2
+names = ["GPIO02", "PIN03", "SDA1"]
+
+[[pins]]
+num = 3
+names = ["GPIO03", "PIN05", "SCL1"]
+
+[[pins]]
+num = 4
+names = ["GPIO04", "PIN07", "GPIO_GCLK"]
+
+[[pins]]
+num = 14
+names = ["GPIO14", "PIN08", "TXD0"]
+
+[[pins]]
+num = 15
+names = ["GPIO15", "PIN10", "RXD0"]
+
+[[pins]]
+num = 17
+names = ["GPIO17", "PIN11", "GPIO_GEN0"]
+
+[[pins]]
+num = 18
+names = ["GPIO18", "PIN12", "GPIO_GEN1"]
+
+[[pins]]
+num = 27
+names = ["GPIO27", "PIN13", "GPIO_GEN2"]
+
+[[pins]]
+num = 22
+names = ["GPIO22", "PIN15", "GPIO_GEN3"]
+
+[[pins]]
+num = 23
+names = ["GPIO23", "PIN16", "GPIO_GEN4"]
+
+[[pins]]
+num = 24
+names = ["GPIO24", "PIN18", "GPIO_GEN5"]
+
+[[pins]]
+num = 10
+names = ["GPIO10", "PIN19", "SPI_MOSI"]
+
+[[pins]]
+num = 9
+names = ["GPIO09", "PIN21", "SPI_MISO"]
+
+[[pins]]
+num = 25
+names = ["GPIO25", "PIN22", "GPIO_GEN6"]
+
+[[pins]]
+num = 11
+names = ["GPIO11", "PIN23", "SPI_CLK"]
+
+[[pins]]
+num = 8
+names = ["GPIO08", "PIN24", "SPI_CE0_N"]
+
+[[pins]]
+num = 7
+names = ["GPIO07", "PIN26", "SPI_CE1_N"]
+
+[[pins]]
+num = 5
+names = ["GPIO05", "PIN29"]
+
+[[pins]]
+num = 6
+names = ["GPIO06", "PIN31"]
+
+[[pins]]
+num = 12
+names = ["GPIO12", "PIN32"]
+
+[[pins]]
+num = 13
+names = ["GPIO13", "PIN33"]
+
+[[pins]]
+num = 19
+names = ["GPIO19", "PIN35"]
+
+[[pins]]
+num = 16
+names = ["GPIO16", "PIN36"]
+
+[[pins]]
+num = 26
+names = ["GPIO26", "PIN37"]
+
+[[pins]]
+num = 20
+names = ["GPIO20", "PIN38"]
+
+[[pins]]
+num = 21
+names = ["GPIO21", "PIN40"]
