@@ -136,7 +136,7 @@ fn main() {
 
     // process global options
     let gpio_options = GpioOptions {
-        configs: matches.values_of_lossy("config").unwrap_or(Vec::new()),
+        configs: matches.values_of_lossy("config").unwrap_or_default(),
     };
 
     // parse the config
