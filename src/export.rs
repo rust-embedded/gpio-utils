@@ -19,7 +19,7 @@ use sysfs_gpio;
 /// actions:
 ///
 /// 1. For each GPIO name/alias, the corresponding symlink is remvoed from
-///    `/var/run/gpio/<name>` (or an alternate configured symlink_root).
+///    `/var/run/gpio/<name>` (or an alternate configured `symlink_root`).
 /// 2. The GPIO pin istself is unexported (vai /sys/class/gpio/unexport)
 ///
 /// If the GPIO was already unexported, this function will continue
