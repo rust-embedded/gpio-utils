@@ -206,7 +206,7 @@ impl GpioConfig {
             config_instances.push(try!(Self::from_file(fragment)));
         }
 
-        if config_instances.len() == 0 {
+        if config_instances.is_empty() {
             Err(Error::NoConfigFound)
         } else {
             let mut cfg = config_instances.remove(0);
