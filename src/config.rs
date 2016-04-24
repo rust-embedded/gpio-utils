@@ -116,7 +116,7 @@ impl Decodable for PinConfig {
                             }
                         })
                         .unwrap_or(sysfs_gpio::Direction::In), // default: In
-            names: d.read_struct_field("names", 0, Decodable::decode).unwrap_or(BTreeSet::new()),
+            names: d.read_struct_field("names", 0, Decodable::decode).ok().unwrap_or_default(),
             export: d.read_struct_field("export", 0, Decodable::decode).unwrap_or(true),
             active_low: d.read_struct_field("active_low", 0, Decodable::decode).unwrap_or(false),
         })
