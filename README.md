@@ -94,7 +94,7 @@ support, etc.
 ## License
 
 ```
-Copyright (c) 2016, Paul Osborne <ospbau@gmail.com>
+Copyright (c) 2016, The gpio-utils Authors.
 
 Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 http://www.apache.org/license/LICENSE-2.0> or the MIT license
