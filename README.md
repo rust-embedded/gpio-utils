@@ -15,15 +15,15 @@ cargo install gpio-utils
 
 ## Features
 
-- [ ] Infrastructure for providing names for the GPIOs in one's system providing
+- [x] Infrastructure for providing names for the GPIOs in one's system providing
       names that map to individual pins.  These names (in addition to GPIO numbers)
       may be used with other commands.
-- [ ] Ability to export/unexport GPIOs and expose symlinks using the GPIO "friendly"
+- [x] Ability to export/unexport GPIOs and expose symlinks using the GPIO "friendly"
       names simpler.
-- [ ] Ability to set input/output state on each pin
-- [ ] Ability to get/set gpio values by pin number or name (including temporary
+- [x] Ability to set input/output state on each pin
+- [x] Ability to get/set gpio values by pin number or name (including temporary
       export if necessary)
-- [ ] Ability to block awaiting pin state change (with timeout)
+- [x] Ability to block awaiting pin state change (with timeout)
 
 ## System Integration
 
