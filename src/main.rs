@@ -154,7 +154,7 @@ fn main() {
         ("read", Some(m)) => {
             let read_options = GpioReadOptions {
                 gpio_opts: gpio_options,
-                pin: String::from(m.value_of("pin").unwrap()),
+                pin: m.value_of("pin").unwrap(),
             };
             gpio_read::main(&cfg, &read_options);
         }
@@ -167,16 +167,16 @@ fn main() {
             });
             let poll_options = GpioPollOptions {
                 gpio_opts: gpio_options,
-                edge: String::from(m.value_of("edge").unwrap_or("both")),
+                edge: m.value_of("edge").unwrap_or("both"),
                 timeout: timeout,
-                pin: String::from(m.value_of("pin").unwrap()),
+                pin: m.value_of("pin").unwrap(),
             };
             gpio_poll::main(&cfg, &poll_options);
         }
         ("write", Some(m)) => {
             let write_options = GpioWriteOptions {
                 gpio_opts: gpio_options,
-                pin: String::from(m.value_of("pin").unwrap()),
+                pin: m.value_of("pin").unwrap(),
                 value: match m.value_of("value").unwrap().parse::<u8>() {
                     Ok(value) => value,
                     Err(_) => {
@@ -191,9 +191,9 @@ fn main() {
         ("export", Some(m)) => {
             let export_options = GpioExportOptions {
                 gpio_opts: gpio_options,
-                pin: String::from(m.value_of("pin").unwrap()),
+                pin: m.value_of("pin").unwrap(),
                 symlink_root: match m.value_of("symlink-root") {
-                    Some(slr) => Some(String::from(slr)),
+                    Some(slr) => Some(slr),
                     None => None,
                 },
             };
@@ -203,7 +203,7 @@ fn main() {
             let exportall_options = GpioExportAllOptions {
                 gpio_opts: gpio_options,
                 symlink_root: match m.value_of("symlink-root") {
-                    Some(slr) => Some(String::from(slr)),
+                    Some(slr) => Some(slr),
                     None => None,
                 },
             };
@@ -212,22 +212,22 @@ fn main() {
         ("unexport", Some(m)) => {
             let unexport_options = GpioUnexportOptions {
                 gpio_opts: gpio_options,
-                pin: String::from(m.value_of("pin").unwrap()),
-                symlink_root: m.value_of("symlink-root").map(String::from),
+                pin: m.value_of("pin").unwrap(),
+                symlink_root: m.value_of("symlink-root"),
             };
             gpio_unexport::main(&cfg, &unexport_options);
         }
         ("unexport-all", Some(m)) => {
             let unexportall_options = GpioUnexportAllOptions {
                 gpio_opts: gpio_options,
-                symlink_root: m.value_of("symlink-root").map(String::from),
+                symlink_root: m.value_of("symlink-root"),
             };
             gpio_unexportall::main(&cfg, &unexportall_options);
         }
         ("status", Some(m)) => {
             let status_options = GpioStatusOptions {
                 gpio_opts: gpio_options,
-                pin: m.value_of("pin").map(String::from),
+                pin: m.value_of("pin"),
             };
             gpio_status::main(&cfg, &status_options);
         }

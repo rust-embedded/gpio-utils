@@ -12,54 +12,54 @@ pub struct GpioOptions {
 }
 
 #[derive(Debug)]
-pub struct GpioReadOptions {
+pub struct GpioReadOptions<'a> {
     pub gpio_opts: GpioOptions,
-    pub pin: String,
+    pub pin: &'a str,
 }
 
 #[derive(Debug)]
-pub struct GpioWriteOptions {
+pub struct GpioWriteOptions<'a> {
     pub gpio_opts: GpioOptions,
-    pub pin: String,
+    pub pin: &'a str,
     pub value: u8,
 }
 
 #[derive(Debug)]
-pub struct GpioPollOptions {
+pub struct GpioPollOptions<'a> {
     pub gpio_opts: GpioOptions,
     pub timeout: Option<isize>,
-    pub edge: String,
-    pub pin: String,
+    pub edge: &'a str,
+    pub pin: &'a str,
 }
 
 #[derive(Debug)]
-pub struct GpioExportOptions {
+pub struct GpioExportOptions<'a> {
     pub gpio_opts: GpioOptions,
-    pub symlink_root: Option<String>,
-    pub pin: String,
+    pub symlink_root: Option<&'a str>,
+    pub pin: &'a str,
 }
 
 #[derive(Debug)]
-pub struct GpioExportAllOptions {
+pub struct GpioExportAllOptions<'a> {
     pub gpio_opts: GpioOptions,
-    pub symlink_root: Option<String>,
+    pub symlink_root: Option<&'a str>,
 }
 
 #[derive(Debug)]
-pub struct GpioUnexportOptions {
+pub struct GpioUnexportOptions<'a> {
     pub gpio_opts: GpioOptions,
-    pub symlink_root: Option<String>,
-    pub pin: String,
+    pub symlink_root: Option<&'a str>,
+    pub pin: &'a str,
 }
 
 #[derive(Debug)]
-pub struct GpioUnexportAllOptions {
+pub struct GpioUnexportAllOptions<'a> {
     pub gpio_opts: GpioOptions,
-    pub symlink_root: Option<String>,
+    pub symlink_root: Option<&'a str>,
 }
 
 #[derive(Debug)]
-pub struct GpioStatusOptions {
+pub struct GpioStatusOptions<'a> {
     pub gpio_opts: GpioOptions,
-    pub pin: Option<String>,
+    pub pin: Option<&'a str>,
 }

@@ -13,7 +13,7 @@ use std::process::exit;
 
 pub fn main(config: &GpioConfig, opts: &GpioPollOptions) {
     let timeout = opts.timeout.unwrap_or(-1);
-    let pin_config = match config.get_pin(&opts.pin[..]) {
+    let pin_config = match config.get_pin(opts.pin) {
         Some(pin) => pin,
         None => {
             println!("Unable to find config entry for pin '{}'", opts.pin);
@@ -21,7 +21,7 @@ pub fn main(config: &GpioConfig, opts: &GpioPollOptions) {
         }
     };
     let pin = pin_config.get_pin();
-    let edge = match &opts.edge[..] {
+    let edge = match opts.edge {
         "rising" => Edge::RisingEdge,
         "falling" => Edge::FallingEdge,
         "both" => Edge::BothEdges,

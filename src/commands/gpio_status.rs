@@ -15,7 +15,7 @@ use std::process::exit;
 pub fn main(config: &GpioConfig, opts: &GpioStatusOptions) {
     match opts.pin {
         Some(ref pin_name) => {
-            let pin_config = match config.get_pin(&pin_name[..]) {
+            let pin_config = match config.get_pin(pin_name) {
                 Some(pin) => pin,
                 None => {
                     println!("Unable to find config entry for pin '{}'", pin_name);

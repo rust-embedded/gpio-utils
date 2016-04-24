@@ -12,13 +12,13 @@ use std::process::exit;
 use export;
 
 pub fn main(config: &GpioConfig, opts: &GpioUnexportOptions) {
-    let pin_config = config.get_pin(&opts.pin[..]).unwrap_or_else(|| {
+    let pin_config = config.get_pin(opts.pin).unwrap_or_else(|| {
         println!("Unable to find config entry for pin '{}'", opts.pin);
         exit(1)
     });
 
     let symlink_root = match opts.symlink_root {
-        Some(ref slr) => &slr[..],
+        Some(slr) => slr,
         None => config.get_symlink_root(),
     };
 
