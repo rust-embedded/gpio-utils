@@ -1,5 +1,9 @@
 # Linux GPIO Utils
 
+[![Build Status](https://travis-ci.org/rust-embedded/gpio-utils.svg?branch=master)](https://travis-ci.org/rust-embedded/gpio-utils)
+[![Version](https://img.shields.io/crates/v/gpio-utils.svg?maxAge=2592000)](https://crates.io/crates/gpio-utils)
+[![License](https://img.shields.io/crates/l/rustc-serialize.svg?maxAge=2592000)](https://github.com/rust-embedded/gpio-utils/blob/master/README.md#license)
+
 GPIO Utils provides convenient access to GPIOs on a Linux system. The library
 builds on top of the sysfs interface to GPIOs exposed by the kernel and provides
 essential functionality required for most embedded systems.
@@ -15,15 +19,15 @@ cargo install gpio-utils
 
 ## Features
 
-- [ ] Infrastructure for providing names for the GPIOs in one's system providing
+- [x] Infrastructure for providing names for the GPIOs in one's system providing
       names that map to individual pins.  These names (in addition to GPIO numbers)
       may be used with other commands.
-- [ ] Ability to export/unexport GPIOs and expose symlinks using the GPIO "friendly"
+- [x] Ability to export/unexport GPIOs and expose symlinks using the GPIO "friendly"
       names simpler.
-- [ ] Ability to set input/output state on each pin
-- [ ] Ability to get/set gpio values by pin number or name (including temporary
+- [x] Ability to set input/output state on each pin
+- [x] Ability to get/set gpio values by pin number or name (including temporary
       export if necessary)
-- [ ] Ability to block awaiting pin state change (with timeout)
+- [x] Ability to block awaiting pin state change (with timeout)
 
 ## System Integration
 

@@ -12,7 +12,7 @@ use std::process::exit;
 use sysfs_gpio::Direction;
 
 pub fn main(config: &GpioConfig, opts: &GpioWriteOptions) {
-    let pin_config = match config.get_pin(&opts.pin[..]) {
+    let pin_config = match config.get_pin(opts.pin) {
         Some(pin) => pin,
         None => {
             println!("Unable to find config entry for pin '{}'", opts.pin);

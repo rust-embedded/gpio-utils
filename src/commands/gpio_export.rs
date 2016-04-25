@@ -12,7 +12,7 @@ use std::process::exit;
 use export;
 
 pub fn main(config: &GpioConfig, opts: &GpioExportOptions) {
-    let pin = match config.get_pin(&opts.pin[..]) {
+    let pin = match config.get_pin(opts.pin) {
         Some(pin) => pin,
         None => {
             println!("Unable to find config entry for pin '{}'", opts.pin);
@@ -21,7 +21,7 @@ pub fn main(config: &GpioConfig, opts: &GpioExportOptions) {
     };
 
     let symlink_root = match opts.symlink_root {
-        Some(ref slr) => &slr[..],
+        Some(slr) => slr,
         None => config.get_symlink_root(),
     };
 

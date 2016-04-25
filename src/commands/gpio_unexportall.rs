@@ -13,7 +13,7 @@ use export;
 
 pub fn main(config: &GpioConfig, opts: &GpioUnexportAllOptions) {
     let symlink_root = match opts.symlink_root {
-        Some(ref slr) => &slr[..],
+        Some(slr) => slr,
         None => config.get_symlink_root(),
     };
 
