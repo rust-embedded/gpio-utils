@@ -2,6 +2,16 @@
 name = "gpio-utils"
 version = "0.1.0"
 authors = ["Paul Osborne <osbpau@gmail.com>"]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+homepage = "https://github.com/rust-embedded/gpio-utils"
+keywords = ["gpio", "linux", "sysfs_gpoi", "cli", "command-line"]
+description = """
+Command-line utilities for interacting with GPIOs under Linux
+
+This wraps the `sysfs_gpio` crate in a form usable by both
+Rust applications or any other applications.
+"""
 
 [dependencies]
 clap = "2.2"
