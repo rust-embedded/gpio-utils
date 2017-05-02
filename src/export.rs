@@ -73,7 +73,11 @@ pub fn export(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<(), 
         try!(fs::create_dir_all(symroot));
 
         // set the pin direction
-        try!(pin_config.get_pin().set_direction(pin_config.direction.clone()));
+		    // Call up to 3 times, waiting 100 milliseconds after each unsuccessful attempt.
+        match retry(3, 100, || pin_config.get_pin().set_direction(pin_config.direction.clone()), |res| res.is_ok()) {
+          Ok(_) => (),
+			    Err(e) => return Err(sysfs_gpio::Error::Unexpected(e.description().to_string())),
+		    }   
 
         // create symlink for each name
         for name in &pin_config.names {
