@@ -2,10 +2,8 @@ language: rust
 sudo: false
 
 rust:
-  - 1.13.0
   - stable
-  - beta
-  - nightly
+  - 1.16.0
 
 script:
   - cargo test
