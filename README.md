@@ -25,6 +25,7 @@ cargo install gpio-utils
 - [x] Ability to export/unexport GPIOs and expose symlinks using the GPIO "friendly"
       names simpler.
 - [x] Ability to set input/output state on each pin
+- [x] Ability to set active low state on each pin
 - [x] Ability to get/set gpio values by pin number or name (including temporary
       export if necessary)
 - [x] Ability to block awaiting pin state change (with timeout)
@@ -98,7 +99,7 @@ support, etc.
 ## License
 
 ```
-Copyright (c) 2016, The gpio-utils Authors.
+Copyright (c) 2018, The gpio-utils Authors.
 
 Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 http://www.apache.org/license/LICENSE-2.0> or the MIT license
