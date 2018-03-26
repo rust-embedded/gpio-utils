@@ -1,6 +1,6 @@
 [package]
 name = "gpio-utils"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Paul Osborne <osbpau@gmail.com>"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -15,12 +15,13 @@ Rust applications or any other applications.
 
 [dependencies]
 clap = "2.2"
-rustc-serialize = "0.3"
-sysfs_gpio = "0.4"
-toml = "0.1"
+sysfs_gpio = "0.5.2"
+toml = "0.4"
 glob = "0.2"
 log = "0.3"
 env_logger = "0.3"
+serde_derive = "1.0"
+serde = "1.0"
 
 [dependencies.clippy]
 version = "0.0"

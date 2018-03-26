@@ -7,7 +7,6 @@
 // except according to those terms.
 
 use glob::glob;
-use rustc_serialize::{Decodable, Decoder};
 use std::collections::{HashMap, BTreeSet};
 use std::fmt;
 use std::fs::{self, File};
@@ -23,32 +22,63 @@ const DEFAULT_SYMLINK_ROOT: &'static str = "/var/run/gpio";
 #[derive(Debug, PartialEq, Clone)]
 pub struct Direction(pub sysfs_gpio::Direction);
 
+#[derive(Deserialize, Debug)]
+#[serde(remote = "sysfs_gpio::Direction")]
+pub enum DirectionDef {
+    #[serde(rename = "in")]
+    In,
+    #[serde(rename = "out")]
+    Out,
+    #[serde(rename = "high")]
+    High,
+    #[serde(rename = "low")]
+    Low,
+}
+
 impl From<sysfs_gpio::Direction> for Direction {
     fn from(e: sysfs_gpio::Direction) -> Self {
         Direction(e)
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct PinConfig {
     pub num: u64,
+    #[serde(default = "default_direction")]
+    #[serde(with = "DirectionDef")]
     pub direction: sysfs_gpio::Direction,
+    #[serde(default)]
     pub names: BTreeSet<String>,
+    #[serde(default = "bool_true")]
     pub export: bool,
+    #[serde(default)]
     pub active_low: bool,
 }
 
-#[derive(Clone, Debug, Default)]
+fn default_direction()-> sysfs_gpio::Direction {
+    sysfs_gpio::Direction::In
+}
+
+fn bool_true()-> bool {
+    true
+}
+
+#[derive(Clone, Debug, Default, Deserialize)]
 pub struct GpioConfig {
-    pins: Vec<PinConfig>,
-    symlink_root: Option<String>,
+    pub pins: Vec<PinConfig>,
+    #[serde(default)]
+    pub config: SysConfig,
+}
+
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct SysConfig {
+    pub symlink_root: Option<String>,
 }
 
 #[derive(Debug)]
 pub enum Error {
     IoError(io::Error),
-    ParserErrors(Vec<toml::ParserError>),
-    DecodingError(toml::DecodeError),
+    ParserErrors(toml::de::Error),
     NoConfigFound,
     DuplicateNames(String),
 }
@@ -57,13 +87,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Error::IoError(ref e) => e.fmt(f),
-            Error::ParserErrors(ref errors) => {
-                for e in errors {
-                    try!(e.fmt(f));
-                }
-                Ok(())
-            }
-            Error::DecodingError(ref e) => e.fmt(f),
+            Error::ParserErrors(ref e) => e.fmt(f),
             Error::NoConfigFound => write!(f, "No Config Found"),
             Error::DuplicateNames(ref e) => e.fmt(f),
         }
@@ -76,54 +100,6 @@ impl From<io::Error> for Error {
     }
 }
 
-impl From<Vec<toml::ParserError>> for Error {
-    fn from(e: Vec<toml::ParserError>) -> Self {
-        Error::ParserErrors(e)
-    }
-}
-
-impl From<toml::DecodeError> for Error {
-    fn from(e: toml::DecodeError) -> Self {
-        Error::DecodingError(e)
-    }
-}
-
-impl Decodable for GpioConfig {
-    fn decode<D: Decoder>(d: &mut D) -> Result<Self, D::Error> {
-        // Get items under the [config] header if present
-        let symlink_root = d.read_struct_field("config", 0, |cfg| {
-                                cfg.read_struct_field("symlink_root", 0, Decodable::decode)
-                            })
-                            .ok();
-
-        Ok(GpioConfig {
-            pins: try!(d.read_struct_field("pins", 0, Decodable::decode)),
-            symlink_root: symlink_root,
-        })
-    }
-}
-
-impl Decodable for PinConfig {
-    fn decode<D: Decoder>(d: &mut D) -> Result<PinConfig, D::Error> {
-        Ok(PinConfig {
-            num: try!(d.read_struct_field("num", 0, Decodable::decode)),
-            direction: d.read_struct_field("direction", 0, |dir_d| {
-                            match &try!(dir_d.read_str())[..] {
-                                "in" => Ok(sysfs_gpio::Direction::In),
-                                "out" => Ok(sysfs_gpio::Direction::Out),
-                                "high" => Ok(sysfs_gpio::Direction::High),
-                                "low" => Ok(sysfs_gpio::Direction::Low),
-                                _ => Err(dir_d.error("Expected one of: {in, out, high, low}")),
-                            }
-                        })
-                        .unwrap_or(sysfs_gpio::Direction::In), // default: In
-            names: d.read_struct_field("names", 0, Decodable::decode).ok().unwrap_or_default(),
-            export: d.read_struct_field("export", 0, Decodable::decode).unwrap_or(true),
-            active_low: d.read_struct_field("active_low", 0, Decodable::decode).unwrap_or(false),
-        })
-    }
-}
-
 impl PinConfig {
     /// Get the `sysfs_gpio::Pin` to go along with this config`
     pub fn get_pin(&self) -> sysfs_gpio::Pin {
@@ -133,17 +109,18 @@ impl PinConfig {
 
 impl FromStr for GpioConfig {
     type Err = Error;
-
     /// Load a GPIO configuration for the provided toml string
     fn from_str(config: &str) -> Result<Self, Error> {
-        let mut parser = toml::Parser::new(config);
-        let root = try!(parser.parse().ok_or(parser.errors));
-        match Self::decode(&mut toml::Decoder::new(toml::Value::Table(root))) {
+        let cfg = toml::from_str(&config);
+        match cfg {
             Ok(cfg) => {
-                try!(cfg.validate().or_else(|e| Err(Error::from(e))));
+                let val_config: GpioConfig = toml::from_str(&config).unwrap();
+                (val_config.validate().or_else(|e| Err(Error::from(e))))?;
                 Ok(cfg)
-            }
-            Err(e) => Err(Error::from(e)),
+            },
+            Err(e) => {
+                Err(Error::ParserErrors(e))
+            },
         }
     }
 }
@@ -195,7 +172,6 @@ impl GpioConfig {
         if fs::metadata("/etc/gpio.toml").is_ok() {
             config_instances.push(try!(Self::from_file("/etc/gpio.toml")));
         }
-
         // /etc/gpio.d/*.toml
         for fragment in glob("/etc/gpio.d/*.toml").unwrap().filter_map(Result::ok) {
             config_instances.push(try!(Self::from_file(fragment)));
@@ -248,7 +224,7 @@ impl GpioConfig {
 
     /// Get the symlink root specified in the config (or the default)
     pub fn get_symlink_root(&self) -> &str {
-        match self.symlink_root {
+        match self.config.symlink_root {
             Some(ref root) => &root,
             None => DEFAULT_SYMLINK_ROOT,
         }
@@ -258,10 +234,9 @@ impl GpioConfig {
     ///
     /// If in conflict, the other GPIO config takes priority.
     pub fn update(&mut self, other: GpioConfig) -> Result<(), Error> {
-        if let Some(symlink_root) = other.symlink_root {
-            self.symlink_root = Some(symlink_root);
+        if let Some(symlink_root) = other.config.symlink_root {
+            self.config.symlink_root = Some(symlink_root);
         }
-
         for other_pin in other.pins {
             // determine the case we are dealing with
             let existing = match self.pins.iter_mut().find(|p| p.num == other_pin.num) {
@@ -421,16 +396,21 @@ names = ["wildcard"]
     fn test_parser_empty_toml() {
         let configstr = "";
         match GpioConfig::from_str(configstr) {
-            Ok(pins) => assert_eq!(pins.pins, vec![]),
-            _ => panic!("Expected a decoding error"),
+            Ok(pins) => {
+                assert_eq!(pins.pins, vec![])
+            },
+            Err(Error::ParserErrors(_)) => {}
+            _ => {
+                panic!("Expected a parsing error")
+            },
         }
     }
 
     #[test]
     fn test_parser_missing_pinnum() {
         match GpioConfig::from_str(MISSING_PINNUM_CFG) {
-            Err(Error::DecodingError(_)) => {}
-            _ => panic!("Expected a decoding error"),
+            Err(Error::ParserErrors(_)) => {}
+            _ => panic!("Expected a parsing error"),
         }
     }
 

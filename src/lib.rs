@@ -7,10 +7,11 @@
 // except according to those terms.
 
 extern crate sysfs_gpio;
-extern crate rustc_serialize;
 extern crate toml;
 extern crate glob;
 extern crate log;
+extern crate serde;
+#[macro_use] extern crate serde_derive;
 
 pub mod options;
 pub mod config;

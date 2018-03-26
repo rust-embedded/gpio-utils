@@ -3,7 +3,7 @@ sudo: false
 
 rust:
   - stable
-  - 1.16.0
+  - 1.20.0
 
 script:
   - cargo test

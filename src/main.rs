@@ -5,12 +5,10 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
-
 extern crate gpio_utils;
 extern crate clap;
 extern crate env_logger;
 extern crate log;
-
 
 use clap::{Arg, App, SubCommand, AppSettings};
 use gpio_utils::options::*;
