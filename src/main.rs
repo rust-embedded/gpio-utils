@@ -17,7 +17,7 @@ use gpio_utils::config::{self, GpioConfig};
 use std::process::exit;
 
 fn main() {
-    env_logger::init().unwrap();
+    env_logger::init();
 
     let matches = App::new("GPIO Utils")
         .version(env!("CARGO_PKG_VERSION"))

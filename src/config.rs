@@ -53,6 +53,9 @@ pub struct PinConfig {
     pub export: bool,
     #[serde(default)]
     pub active_low: bool,
+    pub user: Option<String>,
+    pub group: Option<String>,
+    pub mode: Option<u32>,
 }
 
 fn default_direction()-> sysfs_gpio::Direction {

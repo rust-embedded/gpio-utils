@@ -8,10 +8,14 @@
 
 use std::path;
 use std::os::unix::fs as unix_fs;
+use std::os::unix::fs::PermissionsExt;
 use std::fs;
 use std::io::ErrorKind;
 use config::PinConfig;
+use nix::unistd::{chown, Gid, Uid};
 use sysfs_gpio;
+use users::{get_user_by_name, get_group_by_name};
+use error::*;
 
 /// Unexport the pin specified in the provided config
 ///
@@ -26,7 +30,7 @@ use sysfs_gpio;
 /// without an error as the desired end state is achieved.
 pub fn unexport(pin_config: &PinConfig,
                 symlink_root: Option<&str>)
-                -> Result<(), sysfs_gpio::Error> {
+                -> Result<()> {
     if let Some(symroot) = symlink_root {
         // create symlink for each name
         for name in &pin_config.names {
@@ -48,7 +52,7 @@ pub fn unexport(pin_config: &PinConfig,
     match pin.unexport() {
         Ok(_) => Ok(()),
         Err(sysfs_gpio::Error::Io(ref e)) if e.kind() == ErrorKind::InvalidInput => Ok(()),
-        Err(e) => Err(e)
+        Err(e) => Err(e.into())
     }
 }
 
@@ -63,9 +67,33 @@ pub fn unexport(pin_config: &PinConfig,
 ///
 /// If the GPIO is already exported, this function will continue
 /// without an error as the desired end state is achieved.
-pub fn export(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<(), sysfs_gpio::Error> {
+pub fn export(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<()> {
     let pin = pin_config.get_pin();
     try!(pin.export());
+
+    // change user, group, mode for files in gpio directory
+    for entry in fs::read_dir(format!("/sys/class/gpio/gpio{}", &pin_config.num))? {
+        let e = entry?;
+        let metadata = e.metadata()?;
+
+        let user = pin_config.user.as_ref().and_then(|username| get_user_by_name(username));
+        let group = pin_config.group.as_ref().and_then(|groupname| get_group_by_name(groupname));
+
+        if metadata.is_file() {
+            if user.is_some() && group.is_some() {
+                chown(e.path().as_path(),
+                      user.as_ref().map(|u| Uid::from_raw(u.uid())),
+                      group.as_ref().map(|g| Gid::from_raw(g.gid())))?;
+            }
+
+            if let Some(mode) = pin_config.mode {
+                let mut permissions = metadata.permissions();
+                permissions.set_mode(mode);
+                fs::set_permissions(e.path().as_path(), permissions)?;
+            }
+        }
+    }
+
 
     // if there is a symlink root provided, create symlink
     if let Some(symroot) = symlink_root {

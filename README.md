@@ -29,6 +29,7 @@ cargo install gpio-utils
 - [x] Ability to get/set gpio values by pin number or name (including temporary
       export if necessary)
 - [x] Ability to block awaiting pin state change (with timeout)
+- [x] Ability to set exported GPIO permissions
 
 ## System Integration
 
@@ -66,7 +67,9 @@ how you can configure your GPIOs.
 #    be reversed.
 # - `export`: Default: `true`.  If true, this GPIO will be automatically
 #    exported when `gpio export-all` is run (e.g. by an init script).
-#
+# - `user`: User that should own the exported GPIO
+# - `group`: Group that should own the exported GPIO
+# - `mode`: Mode for exported directory
 
 [[pins]]
 num = 73                 # required
@@ -74,6 +77,9 @@ names = ["reset_button"] # required (may have multiple)
 direction = "in"         # default: in
 active_low = false       # default: false (really means invert logic)
 export = true            # default: true
+user = "root"            # default: (OS Default - root)
+group = "gpio"           # default: (OS Default - root)
+mode = 0o664             # default: (OS Default - 0o644)
 
 [[pins]]
 num = 37
