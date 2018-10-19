@@ -17,7 +17,7 @@ use std::str::FromStr;
 use sysfs_gpio;
 use toml;
 
-const DEFAULT_SYMLINK_ROOT: &'static str = "/var/run/gpio";
+const DEFAULT_SYMLINK_ROOT: &str = "/var/run/gpio";
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Direction(pub sysfs_gpio::Direction);
@@ -118,7 +118,7 @@ impl FromStr for GpioConfig {
         match cfg {
             Ok(cfg) => {
                 let val_config: GpioConfig = toml::from_str(&config).unwrap();
-                (val_config.validate().or_else(|e| Err(Error::from(e))))?;
+                val_config.validate()?;
                 Ok(cfg)
             }
             Err(e) => Err(Error::ParserErrors(e)),
@@ -244,7 +244,7 @@ impl GpioConfig {
             let existing = match self.pins.iter_mut().find(|p| p.num == other_pin.num) {
                 Some(pin) => {
                     pin.names.extend(other_pin.names.clone());
-                    pin.direction = other_pin.direction.clone(); // TODO impl copy
+                    pin.direction = other_pin.direction;
                     pin.export = other_pin.export;
                     pin.active_low = other_pin.active_low;
                     true

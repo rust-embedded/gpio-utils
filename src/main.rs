@@ -165,8 +165,8 @@ fn main() {
             let poll_options = GpioPollOptions {
                 gpio_opts: gpio_options,
                 edge: m.value_of("edge").unwrap_or("both"),
-                timeout: timeout,
                 pin: m.value_of("pin").unwrap(),
+                timeout,
             };
             gpio_poll::main(&cfg, &poll_options);
         }

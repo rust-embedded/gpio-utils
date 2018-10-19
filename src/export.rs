@@ -128,12 +128,12 @@ pub fn export(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<()> 
         // set the pin direction
         pin_config
             .get_pin()
-            .set_direction(pin_config.direction.clone())?;
+            .set_direction(pin_config.direction)?;
 
         // set active low directio
         pin_config
             .get_pin()
-            .set_active_low(pin_config.active_low.clone())?;
+            .set_active_low(pin_config.active_low)?;
 
         // create symlink for each name
         for name in &pin_config.names {
