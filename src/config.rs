@@ -171,16 +171,16 @@ impl GpioConfig {
 
         // check /etc/gpio.toml
         if fs::metadata("/etc/gpio.toml").is_ok() {
-            config_instances.push(try!(Self::from_file("/etc/gpio.toml")));
+            config_instances.push(Self::from_file("/etc/gpio.toml")?);
         }
         // /etc/gpio.d/*.toml
         for fragment in glob("/etc/gpio.d/*.toml").unwrap().filter_map(Result::ok) {
-            config_instances.push(try!(Self::from_file(fragment)));
+            config_instances.push(Self::from_file(fragment)?);
         }
 
         // additional from command-line
         for fragment in configs {
-            config_instances.push(try!(Self::from_file(fragment)));
+            config_instances.push(Self::from_file(fragment)?);
         }
 
         if config_instances.is_empty() {
@@ -188,7 +188,7 @@ impl GpioConfig {
         } else {
             let mut cfg = config_instances.remove(0);
             for higher_priority_cfg in config_instances {
-                try!(cfg.update(higher_priority_cfg));
+                cfg.update(higher_priority_cfg)?;
             }
             Ok(cfg)
         }
@@ -197,10 +197,11 @@ impl GpioConfig {
     /// Load a GPIO config from the specified path
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<GpioConfig, Error> {
         let mut contents = String::new();
-        let mut f = try!(File::open(path));
-        try!(f.read_to_string(&mut contents));
-        let config = try!(GpioConfig::from_str(&contents[..]));
-        try!(config.validate());
+        let mut f = File::open(path)?;
+        f.read_to_string(&mut contents)?;
+        let config = GpioConfig::from_str(&contents[..])?;
+        config.validate()?;
+
         Ok(config)
     }
 

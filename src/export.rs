@@ -39,11 +39,11 @@ pub fn unexport(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<()
         for name in &pin_config.names {
             let mut dst = path::PathBuf::from(symroot);
             dst.push(name);
-            try!(match fs::remove_file(dst) {
-                Ok(_) => Ok(()),
-                Err(ref e) if e.kind() == ErrorKind::NotFound => Ok(()),
-                Err(e) => Err(e),
-            });
+            match fs::remove_file(dst) {
+                Ok(_) => (),
+                Err(ref e) if e.kind() == ErrorKind::NotFound => (),
+                Err(e) => return Err(e.into()),
+            };
         }
     }
 
@@ -123,35 +123,27 @@ pub fn export(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<()> 
     // if there is a symlink root provided, create symlink
     if let Some(symroot) = symlink_root {
         // create root directory if not exists
-        try!(fs::create_dir_all(symroot));
+        fs::create_dir_all(symroot)?;
 
         // set the pin direction
-        try!(
-            pin_config
-                .get_pin()
-                .set_direction(pin_config.direction.clone())
-        );
+        pin_config
+            .get_pin()
+            .set_direction(pin_config.direction.clone())?;
 
-        // set active low direction
-        try!(
-            pin_config
-                .get_pin()
-                .set_active_low(pin_config.active_low.clone())
-        );
+        // set active low directio
+        pin_config
+            .get_pin()
+            .set_active_low(pin_config.active_low.clone())?;
 
         // create symlink for each name
         for name in &pin_config.names {
             let mut dst = path::PathBuf::from(symroot);
             dst.push(name);
-            try!(
-                match unix_fs::symlink(format!("/sys/class/gpio/gpio{}", pin_config.num), dst) {
-                    Ok(_) => Ok(()),
-                    Err(e) => match e.kind() {
-                        ErrorKind::AlreadyExists => Ok(()),
-                        _ => Err(e),
-                    },
-                }
-            );
+            match unix_fs::symlink(format!("/sys/class/gpio/gpio{}", pin_config.num), dst) {
+                Err(ref e) if e.kind() == ErrorKind::AlreadyExists => (),
+                Err(e) => return Err(e.into()),
+                _ => (),
+            };
         }
     }
 
