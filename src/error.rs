@@ -6,9 +6,9 @@
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use sysfs_gpio::Error as GpioError;
 use nix::Error as NixError;
 use std::io::Error as IoError;
+use sysfs_gpio::Error as GpioError;
 
 error_chain! {
     types {

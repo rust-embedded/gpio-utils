@@ -6,11 +6,11 @@
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use options::GpioStatusOptions;
 use config::GpioConfig;
 use config::PinConfig;
-use sysfs_gpio::Direction;
+use options::GpioStatusOptions;
 use std::process::exit;
+use sysfs_gpio::Direction;
 
 pub fn main(config: &GpioConfig, opts: &GpioStatusOptions) {
     match opts.pin {
@@ -34,32 +34,20 @@ pub fn main(config: &GpioConfig, opts: &GpioStatusOptions) {
     }
 }
 
-
 fn print_pin_header() {
-    println!("| {:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10} |",
-             "Number",
-             "Exported",
-             "Direction",
-             "Active Low",
-             "Names",
-             "Value");
+    println!(
+        "| {:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10} |",
+        "Number", "Exported", "Direction", "Active Low", "Names", "Value"
+    );
     print_row_sep(false);
 }
 
 fn print_row_sep(is_last: bool) {
-    let col_sep = if is_last {
-        "-"
-    } else {
-        "+"
-    };
-    println!("{}{:->13}{:->13}{:->13}{:->13}{:->13}{:->13}",
-             col_sep,
-             col_sep,
-             col_sep,
-             col_sep,
-             col_sep,
-             col_sep,
-             col_sep);
+    let col_sep = if is_last { "-" } else { "+" };
+    println!(
+        "{}{:->13}{:->13}{:->13}{:->13}{:->13}{:->13}",
+        col_sep, col_sep, col_sep, col_sep, col_sep, col_sep, col_sep
+    );
 }
 
 fn print_pin_row(pin_config: &PinConfig, is_last: bool) {
@@ -80,22 +68,15 @@ fn print_pin_row(pin_config: &PinConfig, is_last: bool) {
 
     for (pos, name) in pin_config.names.iter().enumerate() {
         if pos == 0 {
-            println!("| {:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10} |",
-                     pin_config.num,
-                     pin_config.export,
-                     direction,
-                     pin_config.active_low,
-                     name,
-                     value);
+            println!(
+                "| {:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10} |",
+                pin_config.num, pin_config.export, direction, pin_config.active_low, name, value
+            );
         } else {
-            println!("| {:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10} |",
-                     "",
-                     "",
-                     "",
-                     "",
-                     name,
-                     "");
-
+            println!(
+                "| {:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10} |",
+                "", "", "", "", name, ""
+            );
         }
     }
     print_row_sep(is_last);

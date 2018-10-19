@@ -6,8 +6,8 @@
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use options::GpioWriteOptions;
 use config::GpioConfig;
+use options::GpioWriteOptions;
 use std::process::exit;
 use sysfs_gpio::Direction;
 

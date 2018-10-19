@@ -7,7 +7,7 @@
 // except according to those terms.
 
 use glob::glob;
-use std::collections::{HashMap, BTreeSet};
+use std::collections::{BTreeSet, HashMap};
 use std::fmt;
 use std::fs::{self, File};
 use std::io;
@@ -58,11 +58,11 @@ pub struct PinConfig {
     pub mode: Option<u32>,
 }
 
-fn default_direction()-> sysfs_gpio::Direction {
+fn default_direction() -> sysfs_gpio::Direction {
     sysfs_gpio::Direction::In
 }
 
-fn bool_true()-> bool {
+fn bool_true() -> bool {
     true
 }
 
@@ -120,10 +120,8 @@ impl FromStr for GpioConfig {
                 let val_config: GpioConfig = toml::from_str(&config).unwrap();
                 (val_config.validate().or_else(|e| Err(Error::from(e))))?;
                 Ok(cfg)
-            },
-            Err(e) => {
-                Err(Error::ParserErrors(e))
-            },
+            }
+            Err(e) => Err(Error::ParserErrors(e)),
         }
     }
 }
@@ -138,11 +136,11 @@ impl GpioConfig {
         for pin in &self.pins {
             for name in &pin.names {
                 if let Some(other_pin) = all_names.get(&name[..]) {
-                    return Err(Error::DuplicateNames(format!("Pins {} and {} share duplicate \
-                                                              name '{}'",
-                                                             pin.num,
-                                                             other_pin.num,
-                                                             name)));
+                    return Err(Error::DuplicateNames(format!(
+                        "Pins {} and {} share duplicate \
+                         name '{}'",
+                        pin.num, other_pin.num, name
+                    )));
                 }
                 all_names.insert(&name[..], pin);
             }
@@ -266,10 +264,10 @@ impl GpioConfig {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::iter::FromIterator;
     use std::collections::BTreeSet;
-    use sysfs_gpio::Direction as D;
+    use std::iter::FromIterator;
     use std::str::FromStr;
+    use sysfs_gpio::Direction as D;
 
     const BASIC_CFG: &'static str = r#"
 [[pins]]
@@ -335,16 +333,20 @@ names = ["wildcard"]
     fn test_parse_basic() {
         let config = GpioConfig::from_str(BASIC_CFG).unwrap();
         let status_led = config.pins.get(1).unwrap();
-        let names = BTreeSet::from_iter(vec![String::from("status_led"),
-                                             String::from("A27"),
-                                             String::from("green_led")]);
+        let names = BTreeSet::from_iter(vec![
+            String::from("status_led"),
+            String::from("A27"),
+            String::from("green_led"),
+        ]);
 
         assert_eq!(config.get_symlink_root(), "/var/run/gpio");
 
         let reset_button = config.pins.get(0).unwrap();
         assert_eq!(reset_button.num, 73);
-        assert_eq!(reset_button.names,
-                   BTreeSet::from_iter(vec![String::from("reset_button")]));
+        assert_eq!(
+            reset_button.names,
+            BTreeSet::from_iter(vec![String::from("reset_button")])
+        );
         assert_eq!(reset_button.direction, D::In);
         assert_eq!(reset_button.active_low, true);
         assert_eq!(reset_button.export, true);
@@ -385,9 +387,11 @@ names = ["wildcard"]
     fn test_parser_compact() {
         let config = GpioConfig::from_str(COMPACT_CFG).unwrap();
         let status_led = config.pins.get(1).unwrap();
-        let names = BTreeSet::from_iter(vec![String::from("status_led"),
-                                             String::from("A27"),
-                                             String::from("green_led")]);
+        let names = BTreeSet::from_iter(vec![
+            String::from("status_led"),
+            String::from("A27"),
+            String::from("green_led"),
+        ]);
         assert_eq!(status_led.names, names);
         assert_eq!(status_led.direction, D::Out);
         assert_eq!(status_led.active_low, false);
@@ -399,13 +403,9 @@ names = ["wildcard"]
     fn test_parser_empty_toml() {
         let configstr = "";
         match GpioConfig::from_str(configstr) {
-            Ok(pins) => {
-                assert_eq!(pins.pins, vec![])
-            },
+            Ok(pins) => assert_eq!(pins.pins, vec![]),
             Err(Error::ParserErrors(_)) => {}
-            _ => {
-                panic!("Expected a parsing error")
-            },
+            _ => panic!("Expected a parsing error"),
         }
     }
 
@@ -447,17 +447,20 @@ names = ["wildcard"]
 
         let reset_button = config.pins.get(0).unwrap();
         assert_eq!(reset_button.num, 73);
-        assert_eq!(reset_button.names,
-                   BTreeSet::from_iter(vec![String::from("reset_button"),
-                                            String::from("new_name")]));
+        assert_eq!(
+            reset_button.names,
+            BTreeSet::from_iter(vec![String::from("reset_button"), String::from("new_name")])
+        );
         assert_eq!(reset_button.direction, D::In);
         assert_eq!(reset_button.active_low, false);
         assert_eq!(reset_button.export, true);
 
         let status_led = config.pins.get(1).unwrap();
-        let names = BTreeSet::from_iter(vec![String::from("status_led"),
-                                             String::from("A27"),
-                                             String::from("green_led")]);
+        let names = BTreeSet::from_iter(vec![
+            String::from("status_led"),
+            String::from("A27"),
+            String::from("green_led"),
+        ]);
         assert_eq!(status_led.names, names);
         assert_eq!(status_led.direction, D::In);
         assert_eq!(status_led.active_low, false);
@@ -465,7 +468,9 @@ names = ["wildcard"]
 
         let wildcard = config.pins.get(2).unwrap();
         assert_eq!(wildcard.num, 88);
-        assert_eq!(wildcard.names,
-                   BTreeSet::from_iter(vec![String::from("wildcard")]));
+        assert_eq!(
+            wildcard.names,
+            BTreeSet::from_iter(vec![String::from("wildcard")])
+        );
     }
 }

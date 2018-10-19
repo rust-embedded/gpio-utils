@@ -20,8 +20,8 @@ extern crate sysfs_gpio;
 extern crate toml;
 extern crate users;
 
-pub mod error;
-pub mod options;
-pub mod config;
 pub mod commands;
+pub mod config;
+pub mod error;
 pub mod export;
+pub mod options;
