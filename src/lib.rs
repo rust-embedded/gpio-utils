@@ -9,6 +9,8 @@
 #[macro_use]
 extern crate error_chain;
 extern crate glob;
+#[macro_use]
+extern crate lazy_static;
 extern crate log;
 extern crate nix;
 extern crate serde;

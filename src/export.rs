@@ -11,11 +11,16 @@ use std::os::unix::fs as unix_fs;
 use std::os::unix::fs::PermissionsExt;
 use std::fs;
 use std::io::ErrorKind;
+use std::sync::Mutex;
 use config::PinConfig;
 use nix::unistd::{chown, Gid, Uid};
 use sysfs_gpio;
-use users::{get_user_by_name, get_group_by_name};
+use users::{UsersCache, Groups, Users};
 use error::*;
+
+lazy_static! {
+    static ref USERS_CACHE: Mutex<UsersCache> = Mutex::new(UsersCache::new());
+}
 
 /// Unexport the pin specified in the provided config
 ///
@@ -69,31 +74,53 @@ pub fn unexport(pin_config: &PinConfig,
 /// without an error as the desired end state is achieved.
 pub fn export(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<()> {
     let pin = pin_config.get_pin();
-    try!(pin.export());
+    pin.export()?;
+
+    let uid = if let Some(username) = pin_config.user.as_ref() {
+        Some(
+            USERS_CACHE
+                .lock()
+                .unwrap()
+                .get_user_by_name(username)
+                .map(|u| Uid::from_raw(u.uid()))
+                .ok_or_else(|| format!("Unable to find user {:?}", username))?,
+        )
+    } else {
+        None
+    };
+
+    let gid = if let Some(groupname) = pin_config.group.as_ref() {
+        Some(
+            USERS_CACHE
+                .lock()
+                .unwrap()
+                .get_group_by_name(groupname)
+                .map(|g| Gid::from_raw(g.gid()))
+                .ok_or_else(|| format!("Unable to find group {:?}", groupname))?,
+        )
+    } else {
+        None
+    };
 
     // change user, group, mode for files in gpio directory
-    for entry in fs::read_dir(format!("/sys/class/gpio/gpio{}", &pin_config.num))? {
-        let e = entry?;
-        let metadata = e.metadata()?;
+    if uid.is_some() || gid.is_some() || pin_config.mode.is_some() {
+        for entry in fs::read_dir(format!("/sys/class/gpio/gpio{}", &pin_config.num))? {
+            let e = entry?;
+            let metadata = e.metadata()?;
 
-        let user = pin_config.user.as_ref().and_then(|username| get_user_by_name(username));
-        let group = pin_config.group.as_ref().and_then(|groupname| get_group_by_name(groupname));
+            if metadata.is_file() {
+                if uid.is_some() || gid.is_some() {
+                    chown(e.path().as_path(), uid, gid)?;
+                }
 
-        if metadata.is_file() {
-            if user.is_some() && group.is_some() {
-                chown(e.path().as_path(),
-                      user.as_ref().map(|u| Uid::from_raw(u.uid())),
-                      group.as_ref().map(|g| Gid::from_raw(g.gid())))?;
-            }
-
-            if let Some(mode) = pin_config.mode {
-                let mut permissions = metadata.permissions();
-                permissions.set_mode(mode);
-                fs::set_permissions(e.path().as_path(), permissions)?;
+                if let Some(mode) = pin_config.mode {
+                    let mut permissions = metadata.permissions();
+                    permissions.set_mode(mode);
+                    fs::set_permissions(e.path().as_path(), permissions)?;
+                }
             }
         }
     }
-
 
     // if there is a symlink root provided, create symlink
     if let Some(symroot) = symlink_root {
