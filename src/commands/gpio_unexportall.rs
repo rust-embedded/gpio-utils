@@ -6,10 +6,10 @@
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use options::GpioUnexportAllOptions;
 use config::GpioConfig;
-use std::process::exit;
 use export;
+use options::GpioUnexportAllOptions;
+use std::process::exit;
 
 pub fn main(config: &GpioConfig, opts: &GpioUnexportAllOptions) {
     let symlink_root = match opts.symlink_root {

@@ -6,12 +6,21 @@
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::path;
-use std::os::unix::fs as unix_fs;
+use config::PinConfig;
+use error::*;
+use nix::unistd::{chown, Gid, Uid};
 use std::fs;
 use std::io::ErrorKind;
-use config::PinConfig;
+use std::os::unix::fs as unix_fs;
+use std::os::unix::fs::PermissionsExt;
+use std::path;
+use std::sync::Mutex;
 use sysfs_gpio;
+use users::{Groups, Users, UsersCache};
+
+lazy_static! {
+    static ref USERS_CACHE: Mutex<UsersCache> = Mutex::new(UsersCache::new());
+}
 
 /// Unexport the pin specified in the provided config
 ///
@@ -24,19 +33,17 @@ use sysfs_gpio;
 ///
 /// If the GPIO was already unexported, this function will continue
 /// without an error as the desired end state is achieved.
-pub fn unexport(pin_config: &PinConfig,
-                symlink_root: Option<&str>)
-                -> Result<(), sysfs_gpio::Error> {
+pub fn unexport(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<()> {
     if let Some(symroot) = symlink_root {
         // create symlink for each name
         for name in &pin_config.names {
             let mut dst = path::PathBuf::from(symroot);
             dst.push(name);
-            try!(match fs::remove_file(dst) {
-                Ok(_) => Ok(()),
-                Err(ref e) if e.kind() == ErrorKind::NotFound => Ok(()),
-                Err(e) => Err(e),
-            });
+            match fs::remove_file(dst) {
+                Ok(_) => (),
+                Err(ref e) if e.kind() == ErrorKind::NotFound => (),
+                Err(e) => return Err(e.into()),
+            };
         }
     }
 
@@ -48,7 +55,7 @@ pub fn unexport(pin_config: &PinConfig,
     match pin.unexport() {
         Ok(_) => Ok(()),
         Err(sysfs_gpio::Error::Io(ref e)) if e.kind() == ErrorKind::InvalidInput => Ok(()),
-        Err(e) => Err(e)
+        Err(e) => Err(e.into()),
     }
 }
 
@@ -63,34 +70,80 @@ pub fn unexport(pin_config: &PinConfig,
 ///
 /// If the GPIO is already exported, this function will continue
 /// without an error as the desired end state is achieved.
-pub fn export(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<(), sysfs_gpio::Error> {
+pub fn export(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<()> {
     let pin = pin_config.get_pin();
-    try!(pin.export());
+    pin.export()?;
+
+    let uid = if let Some(username) = pin_config.user.as_ref() {
+        Some(
+            USERS_CACHE
+                .lock()
+                .unwrap()
+                .get_user_by_name(username)
+                .map(|u| Uid::from_raw(u.uid()))
+                .ok_or_else(|| format!("Unable to find user {:?}", username))?,
+        )
+    } else {
+        None
+    };
+
+    let gid = if let Some(groupname) = pin_config.group.as_ref() {
+        Some(
+            USERS_CACHE
+                .lock()
+                .unwrap()
+                .get_group_by_name(groupname)
+                .map(|g| Gid::from_raw(g.gid()))
+                .ok_or_else(|| format!("Unable to find group {:?}", groupname))?,
+        )
+    } else {
+        None
+    };
+
+    // change user, group, mode for files in gpio directory
+    if uid.is_some() || gid.is_some() || pin_config.mode.is_some() {
+        for entry in fs::read_dir(format!("/sys/class/gpio/gpio{}", &pin_config.num))? {
+            let e = entry?;
+            let metadata = e.metadata()?;
+
+            if metadata.is_file() {
+                if uid.is_some() || gid.is_some() {
+                    chown(e.path().as_path(), uid, gid)?;
+                }
+
+                if let Some(mode) = pin_config.mode {
+                    let mut permissions = metadata.permissions();
+                    permissions.set_mode(mode);
+                    fs::set_permissions(e.path().as_path(), permissions)?;
+                }
+            }
+        }
+    }
 
     // if there is a symlink root provided, create symlink
     if let Some(symroot) = symlink_root {
         // create root directory if not exists
-        try!(fs::create_dir_all(symroot));
+        fs::create_dir_all(symroot)?;
 
         // set the pin direction
-        try!(pin_config.get_pin().set_direction(pin_config.direction.clone()));
+        pin_config
+            .get_pin()
+            .set_direction(pin_config.direction)?;
 
-        // set active low direction
-        try!(pin_config.get_pin().set_active_low(pin_config.active_low.clone()));
+        // set active low directio
+        pin_config
+            .get_pin()
+            .set_active_low(pin_config.active_low)?;
 
         // create symlink for each name
         for name in &pin_config.names {
             let mut dst = path::PathBuf::from(symroot);
             dst.push(name);
-            try!(match unix_fs::symlink(format!("/sys/class/gpio/gpio{}", pin_config.num), dst) {
-                Ok(_) => Ok(()),
-                Err(e) => {
-                    match e.kind() {
-                        ErrorKind::AlreadyExists => Ok(()),
-                        _ => Err(e),
-                    }
-                }
-            });
+            match unix_fs::symlink(format!("/sys/class/gpio/gpio{}", pin_config.num), dst) {
+                Err(ref e) if e.kind() == ErrorKind::AlreadyExists => (),
+                Err(e) => return Err(e.into()),
+                _ => (),
+            };
         }
     }
 

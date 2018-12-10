@@ -1,11 +1,11 @@
 [package]
 name = "gpio-utils"
-version = "0.1.2"
+version = "0.2.0"
 authors = ["Paul Osborne <osbpau@gmail.com>"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
 homepage = "https://github.com/rust-embedded/gpio-utils"
-keywords = ["gpio", "linux", "sysfs_gpoi", "cli", "command-line"]
+keywords = ["gpio", "linux", "sysfs_gpio", "cli", "command-line"]
 description = """
 Command-line utilities for interacting with GPIOs under Linux
 
@@ -15,21 +15,17 @@ Rust applications or any other applications.
 
 [dependencies]
 clap = "2.2"
+error-chain = "0.12"
 sysfs_gpio = "0.5.2"
 toml = "0.4"
 glob = "0.2"
-log = "0.3"
-env_logger = "0.3"
+lazy_static = "1.1"
+log = "0.4"
+env_logger = "0.5"
+nix = "0.11"
 serde_derive = "1.0"
 serde = "1.0"
-
-[dependencies.clippy]
-version = "0.0"
-optional = true
-
-[features]
-default = []
-lints = ["clippy"]
+users = "0.8"
 
 [[bin]]
 name = "gpio"

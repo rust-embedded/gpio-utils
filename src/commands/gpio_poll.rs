@@ -6,10 +6,10 @@
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use options::GpioPollOptions;
 use config::GpioConfig;
-use sysfs_gpio::Edge;
+use options::GpioPollOptions;
 use std::process::exit;
+use sysfs_gpio::Edge;
 
 pub fn main(config: &GpioConfig, opts: &GpioPollOptions) {
     let timeout = opts.timeout.unwrap_or(-1);

@@ -5,19 +5,19 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
-extern crate gpio_utils;
 extern crate clap;
 extern crate env_logger;
+extern crate gpio_utils;
 extern crate log;
 
-use clap::{Arg, App, SubCommand, AppSettings};
-use gpio_utils::options::*;
+use clap::{App, AppSettings, Arg, SubCommand};
 use gpio_utils::commands::*;
 use gpio_utils::config::{self, GpioConfig};
+use gpio_utils::options::*;
 use std::process::exit;
 
 fn main() {
-    env_logger::init().unwrap();
+    env_logger::init();
 
     let matches = App::new("GPIO Utils")
         .version(env!("CARGO_PKG_VERSION"))
@@ -165,8 +165,8 @@ fn main() {
             let poll_options = GpioPollOptions {
                 gpio_opts: gpio_options,
                 edge: m.value_of("edge").unwrap_or("both"),
-                timeout: timeout,
                 pin: m.value_of("pin").unwrap(),
+                timeout,
             };
             gpio_poll::main(&cfg, &poll_options);
         }
@@ -177,8 +177,10 @@ fn main() {
                 value: match m.value_of("value").unwrap().parse::<u8>() {
                     Ok(value) => value,
                     Err(_) => {
-                        println!("Provided value {:?} is not valid",
-                                 m.value_of("value").unwrap());
+                        println!(
+                            "Provided value {:?} is not valid",
+                            m.value_of("value").unwrap()
+                        );
                         exit(1);
                     }
                 },

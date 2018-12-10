@@ -6,10 +6,10 @@
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use options::GpioExportOptions;
 use config::GpioConfig;
-use std::process::exit;
 use export;
+use options::GpioExportOptions;
+use std::process::exit;
 
 pub fn main(config: &GpioConfig, opts: &GpioExportOptions) {
     let pin = match config.get_pin(opts.pin) {

@@ -6,14 +6,22 @@
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#[macro_use]
+extern crate error_chain;
+extern crate glob;
+#[macro_use]
+extern crate lazy_static;
+extern crate log;
+extern crate nix;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 extern crate sysfs_gpio;
 extern crate toml;
-extern crate glob;
-extern crate log;
-extern crate serde;
-#[macro_use] extern crate serde_derive;
+extern crate users;
 
-pub mod options;
-pub mod config;
 pub mod commands;
+pub mod config;
+pub mod error;
 pub mod export;
+pub mod options;
