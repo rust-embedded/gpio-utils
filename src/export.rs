@@ -125,15 +125,15 @@ pub fn export(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<()> 
         // create root directory if not exists
         fs::create_dir_all(symroot)?;
 
+        // set active low
+        pin_config
+            .get_pin()
+            .set_active_low(pin_config.active_low)?;
+
         // set the pin direction
         pin_config
             .get_pin()
             .set_direction(pin_config.direction)?;
-
-        // set active low directio
-        pin_config
-            .get_pin()
-            .set_active_low(pin_config.active_low)?;
 
         // create symlink for each name
         for name in &pin_config.names {
