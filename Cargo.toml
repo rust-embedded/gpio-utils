@@ -1,7 +1,8 @@
 [package]
 name = "gpio-utils"
 version = "0.3.0"
-authors = ["Paul Osborne <osbpau@gmail.com>"]
+authors = ["Rust Embedded WG Linux Team <embedded-linux@teams.rust-embedded.org>",
+           "Paul Osborne <osbpau@gmail.com>"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
 homepage = "https://github.com/rust-embedded/gpio-utils"
