@@ -17,6 +17,9 @@ installed Rust and then run:
 cargo install gpio-utils
 ```
 
+In order to use docker to cross compile from a MacOs or Linux system please see
+`cross/raspberry-pi.sh`.
+
 ## Features
 
 - [x] Infrastructure for providing names for the GPIOs in one's system providing
