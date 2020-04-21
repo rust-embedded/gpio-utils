@@ -3,6 +3,7 @@ sudo: false
 
 rust:
   - stable
+  # MSRV
   - 1.26.2
 
 script:
