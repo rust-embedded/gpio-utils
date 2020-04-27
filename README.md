@@ -96,6 +96,11 @@ implemented in Rust (a modern systems programming language operating at the same
 level as C but with a type system providing greater productivity and
 reliability) and seeks to operate with a minimum of overhead.
 
+## Minimum Supported Rust Version (MSRV)
+
+This crate is guaranteed to compile on stable Rust 1.26.2 and up. It *might*
+compile with older versions but that may change in any new patch release.
+
 ## Contributing
 
 Contributions are very welcome.  See [CONTRIBUTING.md](CONTRINBUTING.md) for
