@@ -6,9 +6,9 @@
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use config::GpioConfig;
-use config::PinConfig;
-use options::GpioStatusOptions;
+use crate::config::GpioConfig;
+use crate::config::PinConfig;
+use crate::options::GpioStatusOptions;
 use std::process::exit;
 use sysfs_gpio::Direction;
 

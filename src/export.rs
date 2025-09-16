@@ -6,8 +6,8 @@
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use config::PinConfig;
-use error::*;
+use crate::config::PinConfig;
+use crate::error::*;
 use nix::unistd::{chown, Gid, Uid};
 use std::fs;
 use std::io::ErrorKind;

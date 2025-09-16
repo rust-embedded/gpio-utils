@@ -6,8 +6,8 @@
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use config::GpioConfig;
-use options::GpioReadOptions;
+use crate::config::GpioConfig;
+use crate::options::GpioReadOptions;
 use std::process::exit;
 
 pub fn main(config: &GpioConfig, opts: &GpioReadOptions) {
