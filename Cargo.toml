@@ -18,7 +18,7 @@ Rust applications or any other applications.
 [dependencies]
 clap = "2.2"
 error-chain = "0.12"
-sysfs_gpio = "0.5.2"
+sysfs_gpio = "0.6.2"
 toml = "0.4"
 glob = "0.2"
 lazy_static = "1.1"
