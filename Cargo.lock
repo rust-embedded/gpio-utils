@@ -166,7 +166,7 @@ dependencies = [
  "serde_derive",
  "sysfs_gpio",
  "toml",
- "users",
+ "uzers",
 ]
 
 [[package]]
@@ -424,10 +424,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7dd6e30e90baa6f72411720665d41d89b9a3d039dc45b8faea1ddd07f617f6af"
 
 [[package]]
-name = "users"
-version = "0.8.1"
+name = "uzers"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fed7d0912567d35f88010c23dbaf865e9da8b5227295e8dc0f2fdd109155ab7"
+checksum = "4df81ff504e7d82ad53e95ed1ad5b72103c11253f39238bcc0235b90768a97dd"
 dependencies = [
  "libc",
 ]

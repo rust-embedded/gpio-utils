@@ -17,7 +17,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path;
 use std::sync::Mutex;
 use sysfs_gpio;
-use users::{Groups, Users, UsersCache};
+use uzers::{Groups, Users, UsersCache};
 
 lazy_static! {
     static ref USERS_CACHE: Mutex<UsersCache> = Mutex::new(UsersCache::new());
