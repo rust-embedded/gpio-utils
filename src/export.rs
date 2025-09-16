@@ -66,7 +66,7 @@ pub fn unexport(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<()
 ///
 /// 1. The GPIO pin itself is exported (via /sys/class/gpio/export)
 /// 2. For each GPIO name/alias, a symlink is created from
-///     `/var/run/gpio/<name>` -> `/sys/class/gpio<num>`.
+///    `/var/run/gpio/<name>` -> `/sys/class/gpio<num>`.
 ///
 /// If the GPIO is already exported, this function will continue
 /// without an error as the desired end state is achieved.

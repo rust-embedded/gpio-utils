@@ -114,10 +114,10 @@ impl FromStr for GpioConfig {
     type Err = Error;
     /// Load a GPIO configuration for the provided toml string
     fn from_str(config: &str) -> Result<Self, Error> {
-        let cfg = toml::from_str(&config);
+        let cfg = toml::from_str(config);
         match cfg {
             Ok(cfg) => {
-                let val_config: GpioConfig = toml::from_str(&config).unwrap();
+                let val_config: GpioConfig = toml::from_str(config).unwrap();
                 val_config.validate()?;
                 Ok(cfg)
             }
@@ -227,7 +227,7 @@ impl GpioConfig {
     /// Get the symlink root specified in the config (or the default)
     pub fn get_symlink_root(&self) -> &str {
         match self.config.symlink_root {
-            Some(ref root) => &root,
+            Some(ref root) => root,
             None => DEFAULT_SYMLINK_ROOT,
         }
     }

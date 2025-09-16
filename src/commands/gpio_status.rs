@@ -23,7 +23,7 @@ pub fn main(config: &GpioConfig, opts: &GpioStatusOptions) {
                 }
             };
             print_pin_header();
-            print_pin_row(&pin_config, true);
+            print_pin_row(pin_config, true);
         }
         None => {
             print_pin_header();
