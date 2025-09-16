@@ -23,112 +23,148 @@ fn main() {
         .version(env!("CARGO_PKG_VERSION"))
         .about("Read, Write, and Configure GPIOs")
         .setting(AppSettings::SubcommandRequired)
-
         // Global options
-        .arg(Arg::with_name("config")
-             .help("additional configuration to use")
-             .takes_value(true)
-             .short("c")
-             .long("config")
-             .multiple(true)
-             .required(false))
-
+        .arg(
+            Arg::with_name("config")
+                .help("additional configuration to use")
+                .takes_value(true)
+                .short("c")
+                .long("config")
+                .multiple(true)
+                .required(false),
+        )
         // gpio read
-        .subcommand(SubCommand::with_name("read")
-                    .about("Read the value of a GPIO Input")
-                    .arg(Arg::with_name("pin")
-                         .help("The pin name (or number)")
-                         .index(1)
-                         .required(true)))
-
+        .subcommand(
+            SubCommand::with_name("read")
+                .about("Read the value of a GPIO Input")
+                .arg(
+                    Arg::with_name("pin")
+                        .help("The pin name (or number)")
+                        .index(1)
+                        .required(true),
+                ),
+        )
         // gpio poll
-        .subcommand(SubCommand::with_name("poll")
-                    .about("Wait for an event to happen on a GPIO Input")
-                    .arg(Arg::with_name("pin")
-                         .help("The pin name (or number)")
-                         .index(1)
-                         .required(true))
-                    .arg(Arg::with_name("timeout")
-                         .help("Timeout (in ms) for the poll operation (-1 to wait forever, default)")
-                         .takes_value(true)
-                         .short("t")
-                         .long("timeout")
-                         .required(false))
-                    .arg(Arg::with_name("edge")
-                         .help("The edge to poll on")
-                         .takes_value(true)
-                         .short("e")
-                         .long("edge")
-                         .required(false)))
-
+        .subcommand(
+            SubCommand::with_name("poll")
+                .about("Wait for an event to happen on a GPIO Input")
+                .arg(
+                    Arg::with_name("pin")
+                        .help("The pin name (or number)")
+                        .index(1)
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("timeout")
+                        .help(
+                            "Timeout (in ms) for the poll operation (-1 to wait forever, default)",
+                        )
+                        .takes_value(true)
+                        .short("t")
+                        .long("timeout")
+                        .required(false),
+                )
+                .arg(
+                    Arg::with_name("edge")
+                        .help("The edge to poll on")
+                        .takes_value(true)
+                        .short("e")
+                        .long("edge")
+                        .required(false),
+                ),
+        )
         // gpio write
-        .subcommand(SubCommand::with_name("write")
-                    .about("Write the value of a GPIO Output")
-                    .arg(Arg::with_name("pin")
-                         .help("The pin name (or number)")
-                         .index(1)
-                         .required(true))
-                    .arg(Arg::with_name("value")
-                         .help("Value to write to pin (0|1)")
-                         .index(2)
-                         .required(true)))
-
+        .subcommand(
+            SubCommand::with_name("write")
+                .about("Write the value of a GPIO Output")
+                .arg(
+                    Arg::with_name("pin")
+                        .help("The pin name (or number)")
+                        .index(1)
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("value")
+                        .help("Value to write to pin (0|1)")
+                        .index(2)
+                        .required(true),
+                ),
+        )
         // gpio export
-        .subcommand(SubCommand::with_name("export")
-                    .about("Export a given GPIO")
-                    .arg(Arg::with_name("pin")
-                         .help("The pin name (or number)")
-                         .index(1)
-                         .required(true))
-                    .arg(Arg::with_name("symlink-root")
-                         .help("root directory for export symlinks")
-                         .takes_value(true)
-                         .short("r")
-                         .long("symlink-root")
-                         .required(false)))
-
+        .subcommand(
+            SubCommand::with_name("export")
+                .about("Export a given GPIO")
+                .arg(
+                    Arg::with_name("pin")
+                        .help("The pin name (or number)")
+                        .index(1)
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("symlink-root")
+                        .help("root directory for export symlinks")
+                        .takes_value(true)
+                        .short("r")
+                        .long("symlink-root")
+                        .required(false),
+                ),
+        )
         // gpio export-all
-        .subcommand(SubCommand::with_name("export-all")
-                    .about("Export all configured GPIOs")
-                    .arg(Arg::with_name("symlink-root")
-                         .help("root directory for export symlinks")
-                         .takes_value(true)
-                         .short("r")
-                         .long("symlink-root")
-                         .required(false)))
-
+        .subcommand(
+            SubCommand::with_name("export-all")
+                .about("Export all configured GPIOs")
+                .arg(
+                    Arg::with_name("symlink-root")
+                        .help("root directory for export symlinks")
+                        .takes_value(true)
+                        .short("r")
+                        .long("symlink-root")
+                        .required(false),
+                ),
+        )
         // gpio unexport
-        .subcommand(SubCommand::with_name("unexport")
-                    .about("Unexport a given GPIO")
-                    .arg(Arg::with_name("pin")
-                         .help("The pin name (or number)")
-                         .index(1)
-                         .required(true))
-                    .arg(Arg::with_name("symlink-root")
-                         .help("root directory for export symlinks")
-                         .takes_value(true)
-                         .short("r")
-                         .long("symlink-root")
-                         .required(false)))
-
+        .subcommand(
+            SubCommand::with_name("unexport")
+                .about("Unexport a given GPIO")
+                .arg(
+                    Arg::with_name("pin")
+                        .help("The pin name (or number)")
+                        .index(1)
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("symlink-root")
+                        .help("root directory for export symlinks")
+                        .takes_value(true)
+                        .short("r")
+                        .long("symlink-root")
+                        .required(false),
+                ),
+        )
         // gpio unexport-all
-        .subcommand(SubCommand::with_name("unexport-all")
-                    .about("Unexport all configured, exported GPIOs")
-                    .arg(Arg::with_name("symlink-root")
-                         .help("root directory for export symlinks")
-                         .takes_value(true)
-                         .short("r")
-                         .long("symlink-root")
-                         .required(false)))
-
+        .subcommand(
+            SubCommand::with_name("unexport-all")
+                .about("Unexport all configured, exported GPIOs")
+                .arg(
+                    Arg::with_name("symlink-root")
+                        .help("root directory for export symlinks")
+                        .takes_value(true)
+                        .short("r")
+                        .long("symlink-root")
+                        .required(false),
+                ),
+        )
         // gpio status
-        .subcommand(SubCommand::with_name("status")
-                    .about("Output status of a GPIO or all GPIOs if no pin is specified")
-                    .arg(Arg::with_name("pin")
-                         .help("The pin name (or number)")
-                         .index(1)
-                         .required(false)))
-
+        .subcommand(
+            SubCommand::with_name("status")
+                .about("Output status of a GPIO or all GPIOs if no pin is specified")
+                .arg(
+                    Arg::with_name("pin")
+                        .help("The pin name (or number)")
+                        .index(1)
+                        .required(false),
+                ),
+        )
         .get_matches();
 
     // process global options

@@ -8,7 +8,7 @@
 
 use crate::config::PinConfig;
 use crate::error::*;
-use nix::unistd::{chown, Gid, Uid};
+use nix::unistd::{Gid, Uid, chown};
 use std::fs;
 use std::io::ErrorKind;
 use std::os::unix::fs as unix_fs;
@@ -126,14 +126,10 @@ pub fn export(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<()> 
         fs::create_dir_all(symroot)?;
 
         // set active low
-        pin_config
-            .get_pin()
-            .set_active_low(pin_config.active_low)?;
+        pin_config.get_pin().set_active_low(pin_config.active_low)?;
 
         // set the pin direction
-        pin_config
-            .get_pin()
-            .set_direction(pin_config.direction)?;
+        pin_config.get_pin().set_direction(pin_config.direction)?;
 
         // create symlink for each name
         for name in &pin_config.names {
