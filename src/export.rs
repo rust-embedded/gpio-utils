@@ -9,7 +9,7 @@
 use crate::config::PinConfig;
 use crate::error::*;
 use lazy_static::lazy_static;
-use nix::unistd::{Gid, Uid, chown};
+use nix::unistd::{chown, Gid, Uid};
 use std::fs;
 use std::io::ErrorKind;
 use std::os::unix::fs as unix_fs;

@@ -7,7 +7,8 @@ license = "MIT/Apache-2.0"
 readme = "README.md"
 homepage = "https://github.com/rust-embedded/gpio-utils"
 keywords = ["gpio", "linux", "sysfs_gpio", "cli", "command-line"]
-edition = "2024"
+edition = "2021"
+rust-version = "1.75.0"
 description = """
 Command-line utilities for interacting with GPIOs under Linux
 
@@ -28,6 +29,9 @@ nix = "0.11"
 serde_derive = "1.0"
 serde = "1.0"
 uzers = { version = "0.12.1", default-features = false, features = ["cache"] }
+
+# TODO Unpin this dependency after bumping our MSRV beyond 1.75.0.
+backtrace = "=0.3.74"
 
 [[bin]]
 name = "gpio"
