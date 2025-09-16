@@ -6,6 +6,7 @@
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use error_chain::error_chain;
 use nix::Error as NixError;
 use std::io::Error as IoError;
 use sysfs_gpio::Error as GpioError;

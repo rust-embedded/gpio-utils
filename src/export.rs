@@ -8,6 +8,7 @@
 
 use crate::config::PinConfig;
 use crate::error::*;
+use lazy_static::lazy_static;
 use nix::unistd::{Gid, Uid, chown};
 use std::fs;
 use std::io::ErrorKind;

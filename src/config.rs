@@ -7,6 +7,7 @@
 // except according to those terms.
 
 use glob::glob;
+use serde_derive::Deserialize;
 use std::collections::{BTreeSet, HashMap};
 use std::fmt;
 use std::fs::{self, File};
