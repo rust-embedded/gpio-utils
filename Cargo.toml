@@ -17,7 +17,7 @@ Rust applications or any other applications.
 """
 
 [dependencies]
-clap = "2.2"
+clap = { version = "4.5", features = ["derive"] }
 error-chain = "0.12"
 sysfs_gpio = "0.6.2"
 toml = "0.4"
