@@ -20,7 +20,7 @@ use std::process;
 )]
 struct Cli {
     /// additional configuration to use
-    #[arg(short, long)]
+    #[arg(short, long = "config", value_name = "FILE")]
     configs: Vec<String>,
     #[command(subcommand)]
     command: Commands,
