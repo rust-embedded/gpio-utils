@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-latest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+      - name: Build
+        run: cargo build
+      - name: Clippy
+        run: cargo clippy
+      - name: Formatting
+        run: cargo fmt -- --check
+      - name: Docs
+        run: cargo doc
+      - name: Tests
+        run: cargo test
+
+  build-msrv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75.0
+          components: clippy, rustfmt
+      - name: Build
+        run: cargo build
+      - name: Clippy
+        run: cargo clippy
+      - name: Formatting
+        run: cargo fmt -- --check
+      - name: Docs
+        run: cargo doc
+      - name: Tests
+        run: cargo test
+
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Links
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
