@@ -103,9 +103,7 @@ compile with older versions but that may change in any new patch release.
 
 ## Contributing
 
-Contributions are very welcome.  See [CONTRIBUTING.md](CONTRINBUTING.md) for
-additional information on how to report bugs, submit changes, test changes, get
-support, etc.
+Contributions are very welcome.
 
 ## License
 
