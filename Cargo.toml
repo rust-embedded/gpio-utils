@@ -1,6 +1,6 @@
 [package]
 name = "gpio-utils"
-version = "0.5.0-alpha.0"
+version = "0.4.1"
 authors = ["Rust Embedded WG Linux Team <embedded-linux@teams.rust-embedded.org>",
            "Paul Osborne <osbpau@gmail.com>"]
 license = "MIT/Apache-2.0"
