@@ -10,14 +10,22 @@ use nix::Error as NixError;
 use std::io::Error as IoError;
 use sysfs_gpio::Error as GpioError;
 
-error_chain! {
-    types {
-        Error, ErrorKind, ResultExt, Result;
-    }
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error(transparent)]
+    Gpio(#[from] GpioError),
+    #[error(transparent)]
+    Nix(#[from] NixError),
+    #[error(transparent)]
+    Io(#[from] IoError),
+    #[error("{0}")]
+    Msg(String),
+}
 
-    foreign_links {
-        Gpio(GpioError);
-        Nix(NixError);
-        Io(IoError);
+impl From<String> for Error {
+    fn from(msg: String) -> Error {
+        Error::Msg(msg)
     }
 }
+
+pub type Result<T> = std::result::Result<T, Error>;

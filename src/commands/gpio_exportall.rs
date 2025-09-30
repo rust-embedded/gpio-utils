@@ -6,9 +6,9 @@
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use config::GpioConfig;
-use export;
-use options::GpioExportAllOptions;
+use crate::config::GpioConfig;
+use crate::export;
+use crate::options::GpioExportAllOptions;
 use std::process::exit;
 
 pub fn main(config: &GpioConfig, opts: &GpioExportAllOptions) {

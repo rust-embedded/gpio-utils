@@ -6,8 +6,8 @@
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use config::GpioConfig;
-use options::GpioPollOptions;
+use crate::config::GpioConfig;
+use crate::options::GpioPollOptions;
 use std::process::exit;
 use sysfs_gpio::Edge;
 

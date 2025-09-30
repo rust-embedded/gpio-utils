@@ -6,9 +6,9 @@
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use config::GpioConfig;
-use config::PinConfig;
-use options::GpioStatusOptions;
+use crate::config::GpioConfig;
+use crate::config::PinConfig;
+use crate::options::GpioStatusOptions;
 use std::process::exit;
 use sysfs_gpio::Direction;
 
@@ -23,7 +23,7 @@ pub fn main(config: &GpioConfig, opts: &GpioStatusOptions) {
                 }
             };
             print_pin_header();
-            print_pin_row(&pin_config, true);
+            print_pin_row(pin_config, true);
         }
         None => {
             print_pin_header();

@@ -6,8 +6,9 @@
 // option.  This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use config::PinConfig;
-use error::*;
+use crate::config::PinConfig;
+use crate::error::*;
+use lazy_static::lazy_static;
 use nix::unistd::{chown, Gid, Uid};
 use std::fs;
 use std::io::ErrorKind;
@@ -16,7 +17,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path;
 use std::sync::Mutex;
 use sysfs_gpio;
-use users::{Groups, Users, UsersCache};
+use uzers::{Groups, Users, UsersCache};
 
 lazy_static! {
     static ref USERS_CACHE: Mutex<UsersCache> = Mutex::new(UsersCache::new());
@@ -66,7 +67,7 @@ pub fn unexport(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<()
 ///
 /// 1. The GPIO pin itself is exported (via /sys/class/gpio/export)
 /// 2. For each GPIO name/alias, a symlink is created from
-///     `/var/run/gpio/<name>` -> `/sys/class/gpio<num>`.
+///    `/var/run/gpio/<name>` -> `/sys/class/gpio<num>`.
 ///
 /// If the GPIO is already exported, this function will continue
 /// without an error as the desired end state is achieved.
@@ -126,14 +127,10 @@ pub fn export(pin_config: &PinConfig, symlink_root: Option<&str>) -> Result<()> 
         fs::create_dir_all(symroot)?;
 
         // set active low
-        pin_config
-            .get_pin()
-            .set_active_low(pin_config.active_low)?;
+        pin_config.get_pin().set_active_low(pin_config.active_low)?;
 
         // set the pin direction
-        pin_config
-            .get_pin()
-            .set_direction(pin_config.direction)?;
+        pin_config.get_pin().set_direction(pin_config.direction)?;
 
         // create symlink for each name
         for name in &pin_config.names {
