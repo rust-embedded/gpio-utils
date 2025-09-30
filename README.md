@@ -2,6 +2,7 @@
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/rust-embedded/gpio-utils/ci.yaml?branch=master&logo=github)](https://github.com/rust-embedded/gpio-utils/actions)
 [![Version](https://img.shields.io/crates/v/gpio-utils.svg)](https://crates.io/crates/gpio-utils)
+[![Minimum Stable Rust Version](https://img.shields.io/badge/Rust-1.75.0-blue?logo=rust)](https://blog.rust-lang.org/2023/12/28/Rust-1.75.0/)
 [![License](https://img.shields.io/crates/l/rustc-serialize.svg)](https://github.com/rust-embedded/gpio-utils/blob/master/README.md#license)
 
 GPIO Utils provides convenient access to GPIOs on a Linux system. The library
