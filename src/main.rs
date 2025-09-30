@@ -12,6 +12,9 @@ use gpio_utils::config::{self, GpioConfig};
 use gpio_utils::options::*;
 use std::process;
 
+pub const CONFIG_ENV_VAR: &str = "GPIO_UTILS_CONFIG";
+pub const SYMLINK_ROOT_ENV_VAR: &str = "GPIO_UTILS_SYMLINK_ROOT";
+
 #[derive(Debug, Parser)]
 #[command(
     name = "GPIO Utils",
@@ -19,8 +22,8 @@ use std::process;
     about = "Read, Write, and Configure GPIOs"
 )]
 struct Cli {
-    /// additional configuration to use
-    #[arg(short, long = "config", value_name = "FILE")]
+    /// additional configuration to use (separator ':')
+    #[arg(short, long = "config", value_name = "FILE", num_args = 0.., env = CONFIG_ENV_VAR, value_delimiter = ':')]
     configs: Vec<String>,
     #[command(subcommand)]
     command: Commands,
@@ -56,13 +59,13 @@ enum Commands {
         /// The pin name (or number)
         pin: String,
         /// root directory for export symlinks
-        #[arg(short = 'r', long)]
+        #[arg(short = 'r', long, env = SYMLINK_ROOT_ENV_VAR)]
         symlink_root: Option<String>,
     },
     /// Export all configured GPIOs
     ExportAll {
         /// Export all configured GPIOs
-        #[arg(short = 'r', long)]
+        #[arg(short = 'r', long, env = SYMLINK_ROOT_ENV_VAR)]
         symlink_root: Option<String>,
     },
     /// Export all configured GPIOs
@@ -70,13 +73,13 @@ enum Commands {
         /// The pin name (or number)
         pin: String,
         /// root directory for export symlinks
-        #[arg(short = 'r', long)]
+        #[arg(short = 'r', long, env = SYMLINK_ROOT_ENV_VAR)]
         symlink_root: Option<String>,
     },
     /// Unexport all configured, exported GPIOs
     UnexportAll {
         /// root directory for export symlinks
-        #[arg(short = 'r', long)]
+        #[arg(short = 'r', long, env = SYMLINK_ROOT_ENV_VAR)]
         symlink_root: Option<String>,
     },
     /// Output status of a GPIO or all GPIOs if no pin is specified
