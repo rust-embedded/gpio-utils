@@ -12,7 +12,7 @@ use gpio_utils::config::{self, GpioConfig};
 use gpio_utils::options::*;
 use std::process;
 
-#[derive(Parser)]
+#[derive(Debug, Parser)]
 #[command(
     name = "GPIO Utils",
     version,
@@ -26,7 +26,7 @@ struct Cli {
     command: Commands,
 }
 
-#[derive(Subcommand)]
+#[derive(Debug, Subcommand)]
 enum Commands {
     /// Read the value of a GPIO Input
     Read {
