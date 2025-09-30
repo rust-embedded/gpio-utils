@@ -41,7 +41,3 @@ thiserror = { version = "2.0.16", default-features = false }
 [[bin]]
 name = "gpio"
 path = "src/main.rs"
-
-[lints.rust]
-# The cfg `has_error_description_deprecated` is introduced by the error_chain crate.
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(has_error_description_deprecated)'] }
