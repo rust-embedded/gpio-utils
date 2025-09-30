@@ -1,6 +1,6 @@
 # Linux GPIO Utils
 
-[![Build Status](https://travis-ci.org/rust-embedded/gpio-utils.svg?branch=master)](https://travis-ci.org/rust-embedded/gpio-utils)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/rust-embedded/gpio-utils/ci.yaml?branch=master&logo=github)](https://github.com/rust-embedded/gpio-utils/actions)
 [![Version](https://img.shields.io/crates/v/gpio-utils.svg)](https://crates.io/crates/gpio-utils)
 [![License](https://img.shields.io/crates/l/rustc-serialize.svg)](https://github.com/rust-embedded/gpio-utils/blob/master/README.md#license)
 
